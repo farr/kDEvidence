@@ -3,6 +3,8 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 
+\newcommand{\vtheta}{\vec{\theta}}
+
 \bibliographystyle{h-physrev}
 
 \begin{document}
@@ -14,18 +16,88 @@
 \author{Will M. Farr}
 \email{w-farr@northwestern.edu}
 
-\author{Ilya Mandel}
-\email{ilyamandel@chgk.info}
-
 \affiliation{Northwestern University Center for Interdisciplinary
   Research and Education in Astrophysics}
 
+\author{Ilya Mandel}
+\email{ilyamandel@chgk.info}
+
+\affiliation{MIT Kavli Institute}
+
 \begin{abstract}
   Reversible-jump Markov chain monte carlo (RJMCMC) is an extremely
-  powerful technique for performing Bayesian model selection, but 
+  powerful technique for performing Bayesian model selection, but it
+  suffers from a fundamental difficulty: it requires jumps between
+  model parameter spaces, but cannot retain a memory of the favored
+  locations in more than one parameter space at a time.  Thus, a naive
+  jump between parameter spaces is unlikely to be accepted in the MCMC
+  algorithm and convergence is correspondingly slow.  Here we
+  demonstrate an interpolation technique that uses samples from
+  single-model MCMCs to propose inter-model jumps from an
+  approximation to the single-model posterior of the target parameter
+  space.  The interpolation technique, based on a kD-tree
+  datastructure, is adaptive and efficient in arbitrary dimensions.
+  We show that our technique leads to dramatically improved convergene
+  over naive jumps in an RJMCMC, and compare it to other proposals in
+  the literature to improve the convergence of RJMCMCs.  We also
+  discuss the use of the same interpolation technique in two other
+  contexts: as a convergence test for a single-model MCMC and as a way
+  to construct efficient ``global'' proposal distributions for
+  single-model MCMCs without prior knowledge of the structure of the
+  posterior distribution.
 \end{abstract}
 
 \maketitle
+
+\section{Introduction}
+
+\section{Reversible Jump MCMC}
+
+Reversible jump MCMC (RJMCMC) \cite{Green1995} is a technique for
+Bayesian model comparison.  Consider a set of models indexed by an
+integer, $i$: $\{M_i | i = 1, 2, \ldots \}$.  Each model has some
+continuous parameters, $\vtheta_i$; given the model and its
+parameters, we can make a prediction about the likelihood of observing
+some experimental data, $d$: $L(d|\vtheta_i, M_i)$.  When some data
+have been observed in an experiment, Bayes' rule gives us a way to
+compute the posterior probability distribution for the model
+parameters implied by the data:
+\begin{equation}
+  p(M_i, \vtheta_i | d) = \frac{L(d|\vtheta_i, M_i) p(\vtheta_i|M_i) p(M_i)}{p(d)},
+\end{equation}
+where $p(M_i, \vtheta_i |d)$ is the posterior distribution for the
+model parameters $\vtheta_i$ implied by the data in the context of
+model $M_i$, $p(\vtheta_i|M_i)$ and $p(M_i)$ are the prior
+probabilities of the model parameters and the model itself that
+represent our beliefs before accumulating any of the data $d$, and
+$p(d)$ is an overall normalizing constant that ensures that $p(M_i,
+\vtheta_i|d)$ is properly normalized as a probability distribution on
+the $M_i$ and $\vtheta_i$.  This implies that 
+\begin{equation}
+  p(d) = \sum_i \int_{V_i} d\vtheta_i p(M_i, \vtheta_i|d) \equiv
+  \sum_i p(M_i|d),
+\end{equation}
+where $V_i$ is the parameter space volume in model $M_i$, and we have
+defined the integrated model posterior, 
+\begin{equation}
+  p(M_i|d) \equiv \int_{V_i} d\vtheta_i p(M_i, \vtheta_i | d),
+\end{equation}
+which represents the total posterior probability in the model $M_i$
+parameter space.
+
+
+
+
+
+\section{kD Trees and Interpolation}
+
+\section{RJMCMC Efficiency}
+
+\section{Examples}
+
+\section{Other Uses}
+
+\section{Conclusion}
 
 \nocite{Littenberg2009}
 
