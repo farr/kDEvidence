@@ -113,10 +113,10 @@ One way to produce such a sequence of samples is via the Metropolis-Hastings alg
   \item Given a current state $\vtheta^{(i)}$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^{(i)} \to \vtheta^p)$.  
   \item Compute the probability of accepting the proposed jump as
 \be
-p_{\textnormal{accept}}  \equiv \min\Bigl(1,  frac{p(\vtheta^p|d)}{p(\vtheta^{(i)}|d)} \frac{Q(\vtheta^p \to
+p_{\textnormal{accept}}  \equiv \min\Bigl(1,  \frac{p(\vtheta^p|d)}{p(\vtheta^{(i)}|d)} \frac{Q(\vtheta^p \to
         \vtheta^{(i)})}{Q(\vtheta^{(i)} \to \vtheta^p)} \Bigr).
 \ee
-\item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<  p_{\textnormal{accept}}$, accept the proposed jump, setting $\vtheta^{(i+1)}=\vtheta^p$.  Otherwise, reject the jump, and remain at the same location in parameter space for the next step, $\vtheta^{(i+1})=\vtheta^{(i)}$.
+\item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<  p_{\textnormal{accept}}$, accept the proposed jump, setting $\vtheta^{(i+1)}=\vtheta^p$.  Otherwise, reject the jump, and remain at the same location in parameter space for the next step, $\vtheta^{(i+1)}=\vtheta^{(i)}$.
  \end{enumerate}
  
 This jump proposal distribution $Q(\vtheta^{(i)} \to \vtheta^p)$ can depend on the parameters of the current state $\vtheta^{(i)}$, but not on the past history.  It must also allow any state within the allowed prior volume to be reachable by the MCMC.  Beyond these conditions, there is obviously a great deal of freedom in choosing the jump proposal distribution.  This is the most important choice in the MCMC, as it determines the sampling efficiency of the algorithm, i.e., the necessary length of the chain before it converges to the posterior PDF.  Creating an efficient jump proposal distribution requires an understanding of the structure of the parameter space which may not be available until the PDFs are found, creating a Catch-22; one possibility for resolving this infinite loop is described in Section \ref{sec:examples}.
