@@ -2,8 +2,20 @@
 
 \usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{color}
 
 \newcommand{\vtheta}{\vec{\theta}}
+
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\bel}[1]{\begin{equation}\label{#1}}
+\newcommand{\ba}{\begin{eqnarray}}
+\newcommand{\ea}{\end{eqnarray}}
+\newcommand{\bal}[1]{\begin{eqnarray}\label{#1}}
+
+\def\ilya{\textcolor{red}}
+\def\will{\textcolor{blue}}
+
 
 \bibliographystyle{h-physrev}
 
@@ -22,9 +34,10 @@
 \author{Ilya Mandel}
 \email{ilyamandel@chgk.info}
 
-\affiliation{MIT Kavli Institute}
+\affiliation{MIT Kavli Institute; and University of Birmingham, UK}
 
 \begin{abstract}
+\ilya{Add physics/astro motivation}
   Reversible-jump Markov chain monte carlo (RJMCMC) is an extremely
   powerful technique for performing Bayesian model selection, but it
   suffers from a fundamental difficulty: it requires jumps between
@@ -36,8 +49,8 @@
   single-model MCMCs to propose inter-model jumps from an
   approximation to the single-model posterior of the target parameter
   space.  The interpolation technique, based on a kD-tree
-  datastructure, is adaptive and efficient in arbitrary dimensions.
-  We show that our technique leads to dramatically improved convergene
+  data structure, is adaptive and efficient in arbitrary dimensions.
+  We show that our technique leads to dramatically improved convergence
   over naive jumps in an RJMCMC, and compare it to other proposals in
   the literature to improve the convergence of RJMCMCs.  We also
   discuss the use of the same interpolation technique in two other
@@ -53,43 +66,160 @@
 
 \section{Reversible Jump MCMC}
 
-Reversible jump MCMC (RJMCMC) \cite{Green1995} is a technique for
-Bayesian model comparison.  Consider a set of models indexed by an
-integer, $i$: $\{M_i | i = 1, 2, \ldots \}$.  Each model has some
-continuous parameters, $\vtheta_i$; given the model and its
-parameters, we can make a prediction about the likelihood of observing
-some experimental data, $d$: $L(d|\vtheta_i, M_i)$.  When some data
-have been observed in an experiment, Bayes' rule gives us a way to
-compute the posterior probability distribution for the model
+Reversible jump MCMC (RJMCMC) \cite{Green1995} is a technique for Bayesian model comparison.  Below, we give a very brief introduction to Bayesian analysis; describe a standard MCMC; and introduce RJMCMC.
+
+\subsection{Bayesian analysis}
+
+Consider an observed data set $d$ and a set of competing models for the data, indexed by an integer $i$: $\{M_i | i = 1, 2, \ldots \}$.  Each model has some continuous parameters, $\vtheta_i$; given the model and its parameters, we can make a prediction about the likelihood of observing
+the experimental data: $L(d|\vtheta_i, M_i)$.  Within the framework of each model, Bayes' rule gives us a way to compute the posterior probability distribution function (PDF) for the model
 parameters implied by the data:
 \begin{equation}
-  p(M_i, \vtheta_i | d) = \frac{L(d|\vtheta_i, M_i) p(\vtheta_i|M_i) p(M_i)}{p(d)},
+  p(\vtheta_i | d, M_i) = \frac{L(d|\vtheta_i, M_i) p(\vtheta_i|M_i)}{p(d|M_i)},
 \end{equation}
 where $p(M_i, \vtheta_i |d)$ is the posterior distribution for the
 model parameters $\vtheta_i$ implied by the data in the context of
-model $M_i$, $p(\vtheta_i|M_i)$ and $p(M_i)$ are the prior
-probabilities of the model parameters and the model itself that
-represent our beliefs before accumulating any of the data $d$, and
-$p(d)$ is an overall normalizing constant that ensures that $p(M_i,
-\vtheta_i|d)$ is properly normalized as a probability distribution on
-the $M_i$ and $\vtheta_i$.  This implies that 
-\begin{equation}
-  p(d) = \sum_i \int_{V_i} d\vtheta_i p(M_i, \vtheta_i|d) \equiv
-  \sum_i p(M_i|d),
+model $M_i$, $p(\vtheta_i|M_i)$ is the prior
+probability of the model parameters that 
+represents our beliefs before accumulating any of the data $d$, and
+$p(d)$ is an overall normalizing constant that ensures that $p(\vtheta_i|d,M_i)$ is properly normalized as a probability distribution on
+the $\vtheta_i$.  This implies that the evidence is equal to
+\bel{evidence}
+  p(d|M_i) = \int_{V_i} d\vtheta_i L(d|\vtheta_i, M_i) p(\vtheta_i|M_i),
 \end{equation}
-where $V_i$ is the parameter space volume in model $M_i$, and we have
-defined the integrated model posterior, 
+where $V_i$ is the parameter space volume in model $M_i$.  We are interested in the evidence for model $M_i$ given the data, $p(M_i|d)$, which is again given by Bayes' rule as
 \begin{equation}
-  p(M_i|d) \equiv \int_{V_i} d\vtheta_i p(M_i, \vtheta_i | d),
+p(M_i|d) = \frac{p(d|M_i) p(M_i)}{p(d)},
+\end{equation},
+where $p(M_i)$ is our a priori belief in model $M_i$ and $p(d)$ is a normalizing constant, 
+\be
+p(d)=\sum_i p(d|M_i) p(M_i).
+\ee
+
+When selecting among alternative models, we are interested in finding the model with the highest evidence $p(M_i|d)$.  However, attempts to directly compute the evidence by performing the integration in Eq.~(\ref{bel}) are generally very difficult in a multi-dimensional, multi-modal parameter space when the likelihood has to be evaluated numerically.  In particular, a grid-based integral quickly becomes computationally unfeasible as the dimensionality of $\vtheta$ exceeds a few.  The parameter space must typically be explored in a stochastic manner before the evidence integral can be computed.  Although several stochastic parameter-exploration techniques are focused directly on evidence computation (e.g., nested sampling and MultiNest \ilya {Add references}), we frequently want to compute the posterior PDFs within each model along with the evidences for the various models, and the Markov chain Monte Carlo is one of the most widely used tools for this purpose. 
+
+\subsection{MCMC}
+
+MCMC methods produce a Markov chain (or sequence) of parameter
+samples, $\{ \vtheta^(i) \, | \, i = 1, \ldots \}$, such that a particular
+parameter set, $\vtheta$, appears in the sequence with a frequency
+equal to its probability according to a posterior, $p(\vtheta|d)$.  A
+Markov chain has the property that the transition probability from one
+element to the next, $p(\vtheta_i \to \vtheta_{i+1})$, depends only on
+the value of $\vtheta_i$, not on any previous values in the chain.
+
+One way to produce a sequence of MCMC samples is via the following
+algorithm, first proposed by \citet{Metropolis1953} and used widely in
+the physical sciences thereafter:
+\begin{enumerate}
+  \item Begin with the current sample, $\vtheta_i$.
+  \item Propose a new sample, $\vtheta_p$, by drawing randomly from a
+    ``jump proposal distribution'' with probability $Q(\vtheta_i \to
+    \vtheta_p)$.  Note that $Q(\vtheta_i \to \vtheta_p)$ can depend on
+    the current parameters, $\vtheta_i$, and any other ``constant''
+    data, but cannot examine the history of the chain beyond the most
+    recent point.  This is necessary to preserve the Markovian
+    property of the chain.
+  \item Compute the ``acceptance'' probability,
+    \begin{equation}
+      \label{eq:paccept}
+      p_{\textnormal{accept}} \equiv
+      \frac{p(\vtheta_p|d)}{p(\vtheta_i|d)} \frac{Q(\vtheta_p \to
+        \vtheta_i)}{Q(\vtheta_i \to \vtheta_p)}
+    \end{equation}
+  \item With probability $\min(1,p_{\textnormal{accept}})$ ``accept''
+    the proposed $\vtheta_p$, setting $\vtheta_{i+1} = \vtheta_p$;
+    otherwise set $\vtheta_{i+1} = \vtheta_i$.
+\end{enumerate}
+This algorithm is more likely to accept a proposed jump when it
+increases the posterior (the first factor in Equation
+\eqref{eq:paccept}) and when it is to a location in parameter space
+from which it is easy to return (the second factor in Equation
+\eqref{eq:paccept}); the combination of these influences in Equation
+\eqref{eq:paccept} ensures that the equilibrium distribution of the
+chain is $p(\vtheta|d)$.  As $i \to \infty$ the samples $\vtheta_i$
+are distributed according to $p(\vtheta|d)$.  
+
+In practice the number of samples required before the chain
+appropriately samples $p(\vtheta|d)$ depends strongly on the jump
+proposal distribution; proposal distributions that often propose jumps
+toward or within regions of large $p(\vtheta|d)$ can be very
+efficient, while poor proposal distributions can require prohibitively
+large numbers of samples before convergence.  
+
+There is no foolproof test for the convergence of a chain.  In this
+work, we test the convergence of our chains by comparing the
+statistics calculated from the entire chain to statistics calculated
+from only the first half of the chain; when the chain has converged,
+the two calculations agree.  This is a necessary, but not sufficient,
+condition for convergence.
+
+We begin the chain at an arbitrary point in parameter space; this is
+equivalent to taking a finite section of an infinite chain that begins
+with the chosen point.  Every point in parameter space occurs in an
+infinite chain, and no section of the chain is better than any other,
+so a sufficiently long, but finite, section of the infinite chain
+chosen in this manner can be representative of the statistics of the
+chain as a whole.  However, because consecutive samples in a chain are
+correlated with each other, the beginning of our finite chain has a
+``memory'' of the starting point; we discard enough points at the
+beginning of the finite chain that we can be confident it does not
+retain a memory of the arbitrary starting point.  The points discarded
+in this way are commonly called ``burn-in'' points.
+
+\subsection{RJMCMC}
+
+
+Consider the problem of model selection among a set of models, and the
+``super-model'' that encompasses all the models under consideration.
+The parameter space of the super-model consists of a discrete
+parameter that identifies the choice of model, $M_i$, and the
+continuous parameters appropriate for this model, $\vtheta_i$.  We
+denote a point in the super-model parameter space by $\{M_i,
+\vtheta_i\}$; each such point is a statement that, e.g., ``the
+underlying mass distribution for black holes in the galaxy is a
+Gaussian, with parameters $\mu$ and $\sigma$,'' or ``the underlying
+mass distribution for black holes in the galaxy is a triple-bin
+histogram with parameters $w_1$, $w_2$, $w_3$, and $w_4$,'' or ....
+To compare models, we are interested in the quantity (see Equation
+\eqref{eq:model-posterior-def})
+\begin{equation}
+  p(M_i|d) = \int d\vtheta_i p(M_i, \vtheta_i|d).
 \end{equation}
-which represents the total posterior probability in the model $M_i$
-parameter space.
+If we perform an MCMC in the super-model parameter space, then we
+obtain a chain of samples $\{M_i, \vtheta_i \, | \, i = 1, \ldots\}$
+distributed in parameter space with density $p(M_i,\vtheta_i|d)
+d\vtheta_i$ and we can estimate the integral as
+\begin{equation}
+    p(M_i|d) = \int d\vtheta_i p(M_i, \vtheta_i|d) \approx \frac{N_i}{N},
+\end{equation}
+where $N_i$ is the number of samples in the chain lying in the
+parameter space of model $M_i$ and $N$ is the total number of samples
+in the chain.  The fraction of samples lying in the parameter space of
+model $M_i$ gives the probability of that model relative to the other
+models under consideration.
+
+To perform the MCMC in the super-model parameter space, we must
+propose jumps not only between points in a particular model's
+parameter space, but also between the parameter spaces of different
+models.  For this MCMC to be efficient, proposed jumps into a model
+from another should favor regions with large posterior; when the
+posterior is highly-peaked in a small region of parameter space,
+proposed jumps outside this region are unlikely to be accepted, and
+the reversible-jump MCMC samples will require a very long chain to
+properly sample the ``super-model'' posterior.
+
+We can exploit the information we have from single-model MCMCs to
+generate efficient jump proposal distributions for our reversible jump
+MCMC.  We would like to propose jumps that roughly follow the
+distribution of samples in the single-model MCMCs. 
 
 
 
 
 
 \section{kD Trees and Interpolation}
+
+Mention example of bricks from \cite{Littenberg2009}.
 
 \section{RJMCMC Efficiency}
 
