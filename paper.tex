@@ -150,16 +150,64 @@ The most promising solution to this problem is to identify a good jump proposal 
 RJMCMC with efficient PDF interpolation via kD trees can be used in a large variety of problems in physics and astronomy, whenever Bayesian analysis is used to perform model selection.  Below, we describe several scenarios in which we have successfully applied this technique.  Moreover, PDF interpolation with a kD tree can be extremely useful in other contexts, beyond a reversible-jump MCMC.  We suggest two examples below: generating efficient jump proposal distributions in a single-model MCMC and convergence tests.
 
 
-We have successfully employed the RJMCMC technique described above when evaluating several alternative models for the distribution of the masses of black holes in X-ray binaries \cite{Farr:2010}.  We performed a Bayesian analysis of the mass distribution of stellar-mass black holes using the observed masses of 15 low-mass X-ray binary systems undergoing Roche lobe overflow and five high-mass, wind-fed X-ray binary systems.  We considered ten different mass distribution models: Gaussian, double Gaussian, power law, exponential decay, log normal, and 1-, 2-, 3-, 4-, and 5-bin histograms.  Each model was described by between two and six parameters.  Model selection using RJMCMC with kD trees allowed us to determine that the mass distribution of the low-mass systems is  best fit by a power-law, while the distribution of the combined sample is best fit by the exponential model.  We were thus able to conclude that the low-mass subsample is not consistent with being drawn from the distribution of the combined population \cite{Farr:2010}.
+We have successfully employed the RJMCMC technique described above
+when evaluating several alternative models for the distribution of the
+masses of black holes in X-ray binaries \cite{Farr:2010}.  We
+performed a Bayesian analysis of the mass distribution of stellar-mass
+black holes using the observed masses of 15 low-mass X-ray binary
+systems undergoing Roche lobe overflow and five high-mass, wind-fed
+X-ray binary systems.  We considered ten different mass distribution
+models: Gaussian, double Gaussian, power law, exponential decay, log
+normal, and 1-, 2-, 3-, 4-, and 5-bin histograms.  Each model was
+described by between two and six parameters.  Model selection using
+RJMCMC with kD trees allowed us to determine that the mass
+distribution of the low-mass systems is best fit by a power-law, while
+the distribution of the combined sample is best fit by the exponential
+model.  Based on the model selection, we were able to determine which
+models would provide the best information about astrophysically
+relevant parameters, such as the minimum black hole mass.  We were
+also able to conclude that the low-mass subsample is not consistent
+with being drawn from the distribution of the combined population
+\cite{Farr:2010}.
 
-Gravitational-wave astronomy provides the setting for another ongoing study.  LIGO and Virgo gravitational-wave detectors have recently completed taking data, which is currently being analyzed.  Interesting triggers from the detection pipeline that  searches for compact binary coalescences are followed up with Bayesian parameter estimation tools.  In general, several possible models for the data are considered: it can contain pure noise, or noise superimposed on a gravitational-wave signal that may or may not include significant spins in the binary components.  The models can include a large number of parameters (up to 15 for the model with two spinning components), and RJMCMC with interpolation via kD trees is again successful at computing the model evidences. \ilya{Add references throughout this paragraph.}
+Gravitational-wave astronomy provides the setting for another ongoing
+study.  Interesting triggers from the LIGO and Virgo
+gravitational-wave detector pipeline that searches for compact binary
+coalescences are followed up with Bayesian parameter estimation tools.
+In general, several possible models for the data are considered,
+including a pure noise model, noise superimposed on a non-spinning
+gravitational-wave signal, or noise superimposed on a gravitational
+wave signal that includes significant spin or spins in the binary
+components.  The models can include a large number of parameters (up
+to 15 for the model with two spinning components), and RJMCMC with
+interpolation via kD trees is again successful at computing the model
+evidences. \ilya{Add references throughout this paragraph.}
 
 As discussed in Section \ref{sec:mcmc}, finding an efficient jump proposal distribution can be a challenge even for a single-model MCMC.  This is particularly difficult when the parameter space is multi-modal, in which case the Markov chain can get stuck on individual high-likelihood islands in the parameter space.  Traversals of low-likelihood oceans by a series of short jumps are extremely unlikely, and random long jumps are almost always rejected, making sampling very inefficient.  Ideally, an analytical understanding of the model that would give a glimpse of the structure of the archipelago of islands would allow for the creation of jump proposal distributions that combine short jumps designed to explore individual islands with directed long jumps that are likely to end up on neighboring islands.  However, it is not always possible to gain such understanding short of performing the MCMC itself.  One solution lies in running multiple chains that explore the parameter space, perhaps getting stuck on local maxima, and then combining the points and interpolating with a kD tree to create a jump proposal distribution.  Although the chains in the first iteration will not have converged, and the relative sizes of the modes will not be accurately known, this will ensure that all of the modes (islands) are at least included in the jump proposal distribution for a second stage, greatly improving its efficiency.  Other modifications to this technique, which we are currently investigating, include multiple iterative stages, with the interpolated samples from each previous stage used as a jump proposal distribution for the next stage, until the posterior PDF is read off from the final stage; and the use of higher temperatures in the early-stage chains to improve sampling.
 
-The possibility of MCMC chains becoming even temporarily stuck on local maxima also affects convergence.   In the absence of a sufficient number of jump proposals between the local maxima, the MCMC may not accurately represent their relative sizes.  For example, this can happen with antipodal sky location degeneracies for networks of three ground-based gravitational-wave interferometers or for low-frequency gravitational wave signals in the proposed space-borne instrument LISA \cite{LISA}.  Although PDFs produced by MCMC chains will generally show both locations on the sky, the chain length may not be sufficiently long in practice to include enough jumps between the two high-likelihood antipodal locations.  We propose that the convergence of such PDFs can be tested by interpolating them with kD trees as described above and using them as jump proposal distributions in a follow-up MCMC.  This follow-up MCMC would make large global jump proposals rather than small local ones, meaning that it could rapidly accumulate sufficient points to determine whether the original run spent correct fractional amounts of time in the various modes.
-
-
-\ilya{Mention nested sampling?}
+The possibility of MCMC chains becoming even temporarily stuck on
+local maxima also affects convergence.  In the absence of a sufficient
+number of jump proposals between the local maxima, the MCMC may not
+accurately represent their relative sizes.  For example, this can
+happen with antipodal sky location degeneracies for networks of three
+ground-based gravitational-wave interferometers or for low-frequency
+gravitational wave signals in the proposed space-borne instrument LISA
+\cite{LISA}.  Although PDFs produced by MCMC chains will generally
+show both locations on the sky, the chain length may not be
+sufficiently long in practice to include enough jumps between the two
+high-likelihood antipodal locations.  In general, the relative weight
+of two separated peaks is determined with a fractional error that
+scales as $1/\sqrt{N_{\textnormal{transitions}}}$, where
+$N_{\textnormal{transitions}}$ is the number of transitions between
+the peaks.  By increasing the number of proposed transitions, the
+convergence of such PDFs can be enhanced using the kD tree
+interpolated proposal.  We can test the convergence of an MCMC with
+local jumps by running a followup MCMC with a jump proposal
+distribution from an interpolation of the first MCMC's PDF.  This
+follow-up MCMC would make large global jump proposals rather than
+small local ones, meaning that it could rapidly accumulate sufficient
+points to determine whether the original run spent correct fractional
+amounts of time in the various modes.
 
 \section{Conclusion/Discussion}
 
