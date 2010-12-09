@@ -76,12 +76,12 @@ parameters implied by the data:
 \begin{equation}
   p(\vtheta_i | d, M_i) = \frac{L(d|\vtheta_i, M_i) p(\vtheta_i|M_i)}{p(d|M_i)},
 \end{equation}
-where $p(M_i, \vtheta_i |d)$ is the posterior distribution for the
+where $p(\vtheta_i |d, M_i)$ is the posterior distribution for the
 model parameters $\vtheta_i$ implied by the data in the context of
 model $M_i$, $p(\vtheta_i|M_i)$ is the prior
 probability of the model parameters that 
 represents our beliefs before accumulating any of the data $d$, and
-$p(d)$ is an overall normalizing constant that ensures that $p(\vtheta_i|d,M_i)$ is properly normalized as a probability distribution on
+$p(d|M_i)$, called the evidence, is an overall normalizing constant that ensures that $p(\vtheta_i|d,M_i)$ is properly normalized as a probability distribution on
 the $\vtheta_i$.  This implies that the evidence is equal to
 \bel{evidence}
   p(d|M_i) = \int_{V_i} d\vtheta_i L(d|\vtheta_i, M_i) p(\vtheta_i|M_i),
@@ -103,14 +103,14 @@ A Markov chain Monte Carlo produces a set of samples $\{ \vtheta^{(i)} \, | \, i
 
 A Markov chain has the property that the probability distribution of the next state can depend only on the current state, not on the past history:
 \be
-p(\vtheta^(i+1))=\int_{V} d\vtheta^{i} p(\vtheta^{(i)} \to \vtheta^{(i+1)}) p(\vtheta^{(i+1)}),
+p(\vtheta^{(i+1)})=\int_{V} d\vtheta^{i} p(\vtheta^{(i)} \to \vtheta^{(i+1)}) p(\vtheta^{(i+1)}),
 \ee
-where $p(\vtheta^{(i)} \to \vtheta^{(i+1}))$ depends only on $\vtheta^{(i)}$ and $\vtheta^{(i+1)}$. 
+where $p(\vtheta^{(i)} \to \vtheta^{(i+1)})$ depends only on $\vtheta^{(i)}$ and $\vtheta^{(i+1)}$. 
 An additional requirement for an MCMC arises from the fact that the desired distribution is the equilibrium distribution.  In other words, if we assume that state $(i)$ of the chain is sampled from the desired PDF, $p(\vtheta^{(i)})=p(\vtheta|d,M)$ , then the next state $(i+1)$ must be sampled from the PDF as well, so that $p(\vtheta^{(i+1)})=p(\vtheta|d,M)$.  
 
 One way to produce such a sequence of samples is via the Metropolis-Hastings algorithm, first proposed by Metropolis et al.~in 1953 \cite{Metropolis:1953}, and later generalized by Hastings:
 \begin{enumerate}
-  \item Given a current state $\vtheta^(i)$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^(i) \to \vtheta^p)$.  
+  \item Given a current state $\vtheta^{(i)}$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^{(i)} \to \vtheta^p)$.  
   \item Compute the probability of accepting the proposed jump as
 \be
 p_{\textnormal{accept}}  \equiv \min\Bigl(1,  frac{p(\vtheta^p|d)}{p(\vtheta^{(i)}|d)} \frac{Q(\vtheta^p \to
