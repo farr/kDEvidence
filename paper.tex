@@ -99,74 +99,37 @@ When selecting among alternative models, we are interested in finding the model 
 
 \subsection{MCMC}
 
-MCMC methods produce a Markov chain (or sequence) of parameter
-samples, $\{ \vtheta^(i) \, | \, i = 1, \ldots \}$, such that a particular
-parameter set, $\vtheta$, appears in the sequence with a frequency
-equal to its probability according to a posterior, $p(\vtheta|d)$.  A
-Markov chain has the property that the transition probability from one
-element to the next, $p(\vtheta_i \to \vtheta_{i+1})$, depends only on
-the value of $\vtheta_i$, not on any previous values in the chain.
+A Markov chain Monte Carlo produces a set of samples $\{ \vtheta^(i) \, | \, i = 1, \ldots \}$ from the model parameter space that are sampled according to the posterior, meaning that, in the limit that the chain length tends to infinity, the relative frequency with which a given set of parameter appears in the chain is proportional to the desired posterior, $p(\vtheta|d,M)$.  Therefore, the output of an MCMC can be directly interpreted as the posterior PDF over the full parameter space, while PDFs for individual parameters can be obtained through trivially marginalizing over the uninteresting parameters, simply by considering the distribution of the parameter of interest in the MCMC samples.
 
-One way to produce a sequence of MCMC samples is via the following
-algorithm, first proposed by \citet{Metropolis1953} and used widely in
-the physical sciences thereafter:
+A Markov chain has the property that the probability distribution of the next state can depend only on the current state, not on the past history:
+\be
+p(\vtheta^(i+1))=\int_{V} d\vtheta^{i} p(\vtheta^{i} \to \vtheta^{i+1}) p(\vtheta^{i+1}),
+\ee
+where $p(\vtheta^{i} \to \vtheta^{i+1})$ depends only on $\vtheta^{i}$ and $\vtheta^{i+1}$. 
+An additional requirement for an MCMC arises from the fact that the desired distribution is the equilibrium distribution.  In other words, if we assume that state $(i)$ of the chain is sampled from the desired PDF, $p(\vtheta^{i})=p(\vtheta|d,M)$ , then the next state $(i+1)$ must be sampled from the PDF as well, so that $p(\vtheta^{i+1})=p(\vtheta|d,M)$.  
+
+One way to produce such a sequence of samples is via the Metropolis-Hastings algorithm, first proposed by Metropolis et al.~in 1953 \cite{Metropolis:1953}, and later generalized by Hastings:
 \begin{enumerate}
-  \item Begin with the current sample, $\vtheta_i$.
-  \item Propose a new sample, $\vtheta_p$, by drawing randomly from a
-    ``jump proposal distribution'' with probability $Q(\vtheta_i \to
-    \vtheta_p)$.  Note that $Q(\vtheta_i \to \vtheta_p)$ can depend on
-    the current parameters, $\vtheta_i$, and any other ``constant''
-    data, but cannot examine the history of the chain beyond the most
-    recent point.  This is necessary to preserve the Markovian
-    property of the chain.
-  \item Compute the ``acceptance'' probability,
-    \begin{equation}
-      \label{eq:paccept}
-      p_{\textnormal{accept}} \equiv
-      \frac{p(\vtheta_p|d)}{p(\vtheta_i|d)} \frac{Q(\vtheta_p \to
-        \vtheta_i)}{Q(\vtheta_i \to \vtheta_p)}
-    \end{equation}
-  \item With probability $\min(1,p_{\textnormal{accept}})$ ``accept''
-    the proposed $\vtheta_p$, setting $\vtheta_{i+1} = \vtheta_p$;
-    otherwise set $\vtheta_{i+1} = \vtheta_i$.
-\end{enumerate}
-This algorithm is more likely to accept a proposed jump when it
-increases the posterior (the first factor in Equation
-\eqref{eq:paccept}) and when it is to a location in parameter space
-from which it is easy to return (the second factor in Equation
-\eqref{eq:paccept}); the combination of these influences in Equation
-\eqref{eq:paccept} ensures that the equilibrium distribution of the
-chain is $p(\vtheta|d)$.  As $i \to \infty$ the samples $\vtheta_i$
-are distributed according to $p(\vtheta|d)$.  
+  \item Given a current state $\vtheta^(i)$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^(i) \to \vtheta^p)$.  
+  \item Compute the probability of accepting the proposed jump as
+\be
+p_{\textnormal{accept}}  \equiv \min\Bigl(1,  frac{p(\vtheta^p|d)}{p(\vtheta^(i)|d)} \frac{Q(\vtheta^p \to
+        \vtheta^(i))}{Q(\vtheta^(i) \to \vtheta^p)} \Bigr).
+\ee
+\item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<  p_{\textnormal{accept}}$, accept the proposed jump, setting $\vtheta^(i+1)=\vtheta^p$.  Otherwise, reject the jump, and remain at the same location in parameter space for the next step, $\vtheta^(i+1)=\vtheta^(i)$.
+ \end{itemize}
+ 
+This jump proposal distribution $Q(\vtheta^(i) \to \vtheta^p)$ can depend on the parameters of the current state $\vtheta^(i)$, but not on the past history.  It must also allow any state within the allowed prior volume to be reachable by the MCMC.  Beyond these conditions, there is obviously a great deal of freedom in choosing the jump proposal distribution.  This is the most important choice in the MCMC, as it determines the sampling efficiency of the algorithm, i.e., the necessary length of the chain before it converges to the posterior PDF.  Creating an efficient jump proposal distribution requires an understanding of the structure of the parameter space which may not be available until the PDFs are found, creating a Catch-22; one possibility for resolving this infinite loop is described in Section \ref{sec:examples}.
 
-In practice the number of samples required before the chain
-appropriately samples $p(\vtheta|d)$ depends strongly on the jump
-proposal distribution; proposal distributions that often propose jumps
-toward or within regions of large $p(\vtheta|d)$ can be very
-efficient, while poor proposal distributions can require prohibitively
-large numbers of samples before convergence.  
+It should be noted that although an MCMC who jump acceptance criterium obeys detailed balance (as the Metropolis-Hastings algorithm does) must eventually converge to the desired distribution, there is no way to guarantee convergence in a fixed number of steps or to test whether a chain has converged in a foolproof manner.  For example, MCMC chains can get stuck on local maxima, and if the autocorrelation length of the chain represents a substantial fraction of the total number of samples, the effective sample size may be too small to accurately represent the relative sizes of the modes in the PDF (however, see Section \ref{sec:examples} for one intriguing suggestion for remedying this issue).   
 
-There is no foolproof test for the convergence of a chain.  In this
-work, we test the convergence of our chains by comparing the
-statistics calculated from the entire chain to statistics calculated
-from only the first half of the chain; when the chain has converged,
-the two calculations agree.  This is a necessary, but not sufficient,
-condition for convergence.
-
-We begin the chain at an arbitrary point in parameter space; this is
-equivalent to taking a finite section of an infinite chain that begins
-with the chosen point.  Every point in parameter space occurs in an
-infinite chain, and no section of the chain is better than any other,
-so a sufficiently long, but finite, section of the infinite chain
-chosen in this manner can be representative of the statistics of the
-chain as a whole.  However, because consecutive samples in a chain are
-correlated with each other, the beginning of our finite chain has a
-``memory'' of the starting point; we discard enough points at the
-beginning of the finite chain that we can be confident it does not
-retain a memory of the arbitrary starting point.  The points discarded
-in this way are commonly called ``burn-in'' points.
+Finally, we note that, in practice, the randomly chosen initial starting point of the MCMC may be in a particularly unlikely location in the parameter space.  Because jumps are frequently local, we will generally want to ignore the first few autocorrelation lengths worth of points in a finite-size chain to avoid biases in the recovered posterior PDF due to the choice of the initial location.  The points thus discarded are referred to as "burn-in" points.
 
 \subsection{RJMCMC}
+
+The samples produced during a Markov Chain Monte Carlo can be used to directly perform a Monte Carlo evidence integral.  This results in a harmonic mean estimator for the evidence, which suffers from a large variance and a possible bias.  Additional techniques for the direct integration of evidence are described in 
+
+An alternative approach to model selection  models
 
 
 Consider the problem of model selection among a set of models, and the
@@ -223,11 +186,11 @@ Mention example of bricks from \cite{Littenberg2009}.
 
 \section{RJMCMC Efficiency}
 
-\section{Example}
+\section{Examples and other uses} \label{sec:examples}
 
 BH mass paper [still not sure how to present this without repetition...  ]  
 
-
+GW parameter estimation
 
 
 \section{Conclusion/Discussion}
