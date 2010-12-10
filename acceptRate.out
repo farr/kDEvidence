@@ -1,0 +1,8 @@
+Harmonic Mean Estimates:
+pg = 2e-09, pc = 1 
+Gaussian accept 841233, reject 168667
+Cauchy accept 858795, reject 151105
+Gaussian harmonic mean ev = 5.92439e-67
+Cauchy harmonic mean ev = 6.93247e-76
+Odds Ratio = 8.54586e+08
+Bayes ratio = 1.70917
