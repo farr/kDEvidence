@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{color}
+\usepackage{graphicx}
 
 \newcommand{\vtheta}{\vec{\theta}}
 
@@ -225,11 +226,36 @@ From the set of points output by a single-model MCMC,
 $\{\vtheta_i^{(j)} | j = 1, 2, \ldots \}$, all lying in the $M_i$
 parameter space, we would like to construct a set of ``neighborhoods''
 associated with each of the sample points.  The neighborhoods should
-be non-overlapping and fill parameter space.  
+be non-overlapping and fill parameter space.  To draw a proposed jump
+from an approximation to the model PDF, we select a point uniformly
+from the $\vtheta^{(j)}_i$, find its associated neighborhood, and then
+draw the proposed jump uniformly from the neighborhood.  Since the
+MCMC points are distributed according to the posterior PDF for $M_i$,
+this procedure produces proposed jumps that are approximately
+distributed according to the posterior PDF.  In fact, the proposed
+jumps are drawn from a piecewise-constant (i.e.\ constant on each
+neighborhood) interpolation of the PDF.
 
-\ilya{Mention example of bricks from \cite{Littenberg2009}.}
+There are various techniques that could be used to construct the set
+of neighborhoods associated with each point.
+Ref.~\cite{Littenberg2009} decomposed parameter space into
+constant-volume ``bricks'' whose size was set by the typical size of
+the peaks of the PDF.  Each point was associated with the brick that
+contained it.  Unfortunately, this process does not guarantee that
+every brick contains at least one point, which is required for the
+jump proposal to cover the entire model parameter space.  The solution
+to this problem was to add a uniform distribution to the proposal PDF,
+in the form of one ``fictitious'' point per brick.
 
 \section{RJMCMC Efficiency}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{acceptRate}
+  \end{center}
+  \caption{\label{fig:acceptRate} The inter-model acceptance rate as a
+    function of boxing number for the RJMCMC described in the text.}
+\end{figure}
 
 \section{Examples and other uses} \label{sec:examples}
 
