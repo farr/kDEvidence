@@ -17,6 +17,7 @@
 \newcommand{\ilya}[1]{{\color{red} \bf Ilya: #1}}
 \newcommand{\will}[1]{{\color{blue} \bf Will: #1}}
 
+\newcommand{\order}[1]{\mathcal{O}\left( #1 \right)}
 
 \bibliographystyle{h-physrev}
 
@@ -64,7 +65,9 @@
 
 \section{Introduction}
 
-\will{Mention Weinberg direct integration (Ref.~\cite{Weinberg2009}).}
+\will{Mention Weinberg direct integration (Ref.~\cite{Weinberg2009}).
+  Also \cite{Ascasibar2005} in the cosmological context (not really
+  kD-tree, but close).}
 
 \section{Reversible Jump MCMC}
 
@@ -142,7 +145,7 @@ One way to produce such a sequence of samples is via the Metropolis-Hastings alg
 \begin{enumerate}
   \item Given a current state $\vtheta^{(i)}$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^{(i)} \to \vtheta^p)$.  
   \item Compute the probability of accepting the proposed jump as
-\be
+\bel{eq:p-accept}
 p_{\textnormal{accept}}  \equiv \min\Bigl(1,  \frac{p(\vtheta^p|d)}{p(\vtheta^{(i)}|d)} \frac{Q(\vtheta^p \to
         \vtheta^{(i)})}{Q(\vtheta^{(i)} \to \vtheta^p)} \Bigr).
 \ee
@@ -286,12 +289,49 @@ contains all of parameter space.  Then proceed recursively:
   small coordinates along the chosen dimension; the ``right'' sub-box
   contains the half (or nearly half) of the points that have large
   coordinates along the chosen dimension.
-\item Return to step 1 with each of the sub-boxes.
+\item Return to Step 1 with each of the sub-boxes, storing the
+  resulting trees as sub-trees of the current box.
 \end{enumerate}
+The key algorithmic step in the production of a kD-tree is finding the
+median point along a given dimension in order to divide the points in
+half in Step 2.  For $n$ points, this can be accomplished in
+$\order{n}$ time (see, e.g., Ref.~\cite{Press2007}).  If there are $N$
+points in total, there are $\order{\log N}$ levels in the tree; at
+each level, $\order{N}$ points must be processed once in the
+median-finding algorithm.  Tree construction thus costs $\order{N \log
+  N}$ in time, and the tree consumes $\order{N \log N}$ space.  Box
+boundaries for a kD-tree constructed around a point set that is
+normally distributed around the origin in two dimensions are shown in
+Figure \ref{fig:kD-tree}.
 
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{kdtree.png}
+  \end{center}
+  \caption{\label{fig:kD-tree} The neighborhoods from a kD-tree
+    constructed around a set of points that are normally distributed
+    about the origin in two dimensions.  As the points become denser
+    around the origin, the typical neighborhood gets smaller.  The
+    interpolated PDF within a box of volume $V_i$ is $1/(N V_i)$,
+    where $N$ is the total number of points (and boxes).}
+\end{figure}
 
-
-
+In order to use the kD-tree interpolation in an MCMC, we must be able
+to quickly find the neighborhood associated with a given point.  This
+can be accomplished in $\order{\log N}$ time and constant space with
+the following algorithm.  Given the point, $\vtheta_i$---which could
+either be a point in the chain of MCMC samples if we are trying to
+propose a jump, or a previously proposed jump if we are trying to
+compute the jump probability distribution (see
+Eq.~\ref{eq:p-accept})---and the tree, $T$:
+\begin{enumerate}
+\item If $T$ contains exactly one sample point, then its box is the
+  associated neighborhood.  Otherwise:
+\item The tree $T$ has two sub-trees.  If the point $\vtheta_i$ is
+  contained in the ``left'' sub-tree, then return to Step 1,
+  considering this sub-tree; otherwise return to Step 1, considering
+  the ``right'' sub-tree.
+\end{enumerate}
 
 \section{RJMCMC Efficiency}
 
@@ -310,7 +350,7 @@ RJMCMC with efficient PDF interpolation via kD trees can be used in a large vari
 
 We have successfully employed the RJMCMC technique described above
 when evaluating several alternative models for the distribution of the
-masses of black holes in X-ray binaries \cite{Farr:2010}.  We
+masses of black holes in X-ray binaries \cite{Farr2010}.  We
 performed a Bayesian analysis of the mass distribution of stellar-mass
 black holes using the observed masses of 15 low-mass X-ray binary
 systems undergoing Roche lobe overflow and five high-mass, wind-fed
@@ -326,7 +366,7 @@ models would provide the best information about astrophysically
 relevant parameters, such as the minimum black hole mass.  We were
 also able to conclude that the low-mass subsample is not consistent
 with being drawn from the distribution of the combined population
-\cite{Farr:2010}.
+\cite{Farr2010}.
 
 Gravitational-wave astronomy provides the setting for another ongoing
 study.  Interesting triggers from the LIGO and Virgo
