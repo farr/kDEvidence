@@ -125,6 +125,9 @@ the Markov Chain Monte Carlo, which we now describe.
 
 \subsection{MCMC} \label{sec:mcmc}
 
+\will{Here $i$ should become $j$ (or some other index), because we
+  have used $i$ already to denote the model.}
+
 A Markov chain Monte Carlo produces a set of samples $\{ \vtheta^{(i)} \, | \, i = 1, \ldots \}$ from the model parameter space that are sampled according to the posterior, meaning that, in the limit that the chain length tends to infinity, the relative frequency with which a given set of parameter appears in the chain is proportional to the desired posterior, $p(\vtheta|d,M)$.  Therefore, the output of an MCMC can be directly interpreted as the posterior PDF over the full parameter space, while PDFs for individual parameters can be obtained through trivially marginalizing over the uninteresting parameters, simply by considering the distribution of the parameter of interest in the MCMC samples.
 
 A Markov chain has the property that the probability distribution of the next state can depend only on the current state, not on the past history:
@@ -153,19 +156,76 @@ Finally, we note that, in practice, the randomly chosen initial starting point o
 
 \subsection{RJMCMC}
 
-The samples produced during by an MCMC algorithm can be used to directly perform a Monte Carlo evidence integral.  This results in a harmonic mean estimator for the evidence, which suffers from a large variance and a possible bias.  Additional techniques for the direct integration of evidence are described in \cite{Weinberg}, but also suffer from a variety of shortcomings.  \ilya{Will, please expand/modify this appropriately.}  An alternative approach to model selection among a set of models is based on performing an MCMC in a ``super-model'' that encompasses all of the models under consideration; this is known the the Reversible Jump Markov chain Monte Carlo (MCMC).
+The samples produced during by an MCMC algorithm can be used to
+directly perform a Monte Carlo evidence integral.  This results in a
+harmonic mean estimator for the evidence, which suffers from a large
+variance and a possible bias\will{Ilya: Can you add citations here for
+  the suckiness of HM?}.  Additional techniques for the direct
+integration of evidence, also based on a kD tree decomposition of the
+parameter space (see Sec.~\ref{sec:kDTree}), are described in
+\cite{Weinberg2009}.  These techniques are promising, but in some
+cases suffer \cite{Farr2010} from large variance and bias as well.  An
+alternative approach to model selection among a set of models is based
+on performing an MCMC in a ``super-model'' that encompasses all of the
+models under consideration; this is known the the Reversible Jump
+Markov chain Monte Carlo (RJMCMC).
 
-The parameter space of the super-model in an RJMCMC consists of a discrete parameter that identifies the model, $M_i$, and a set of continuous parameters appropriate for that model, $\vtheta_i$.  Thus, each sample consists of a model identifier and a location within the parameter space of that model, $\{M_i, \vtheta_i\}$.  We perform the MCMC in the ``super-model'' parameter space just like a regular MCMC; in general, we can both propose jumps to different parameters within a model (intramodel jumps) and jumps to a different model with different parameters (intermodel jumps).  The resulting chain samples from the posterior $p(M_i,\vtheta_i|d)$.  As in a usual MCMC, the PDF on the model as a parameter, with other parameters ignored, is obtained by trivially marginalizing over the remaining parameters, i.e., the evidence for a given model is just
+The parameter space of the super-model in an RJMCMC consists of a
+discrete parameter that identifies the model, $M_i$, and a set of
+continuous parameters appropriate for that model, $\vtheta_i$.  Thus,
+each sample consists of a model identifier and a location within the
+parameter space of that model, $\{M_i, \vtheta_i\}$.  We perform the
+MCMC in the ``super-model'' parameter space just like a regular MCMC;
+in general, we can both propose jumps to different parameters within a
+model (intramodel jumps) and jumps to a different model with different
+parameters (intermodel jumps).  The resulting chain samples from the
+posterior $p(M_i,\vtheta_i|d)$.  As in a usual MCMC, the PDF on the
+model as a parameter, with other parameters ignored, is obtained by
+marginalizing over the remaining parameters, i.e., the evidence for a
+given model is just
+%
 \be
-    p(M_i|d) = \int d\vtheta_i p(M_i, \vtheta_i|d) \approx \frac{N_i}{N},
- \ee
- where $N_i$ is the number of RJMCMC samples listing the $i$'th model and $N$ is the total chain length.  Thus, the probability of a particular model relative to other models under consideration is given by the fraction of RJMCMC samples lying in the parameter space of that model.
+p(M_i|d) = \int d\vtheta_i p(M_i, \vtheta_i|d) \approx \frac{N_i}{N},
+\ee
+%
+where $N_i$ is the number of RJMCMC samples listing the $i$'th model
+and $N$ is the total chain length.  Thus, the probability of a
+particular model relative to other models under consideration is given
+by the fraction of RJMCMC samples lying in the parameter space of that
+model.
  
-The main difficulty of achieving an efficient RJMCMC is finding a good jump proposal distribution for intermodel jumps.  In order to have relatively high acceptance ratios for intermodel jumps, which is necessary for efficient mixing between models, jumps should be preferentially proposed into regions with a high posterior.  However, because the algorithm is Markovian, it has no past memory, so a jump proposed into a model from outside it can not access information from earlier in the chain which may identify a posterior peak.  
+The main difficulty of achieving an efficient RJMCMC is finding a good
+jump proposal distribution for intermodel jumps.  In order to have
+relatively high acceptance ratios for intermodel jumps, which is
+necessary for efficient mixing between models, jumps should be
+preferentially proposed into regions with a high posterior.  However,
+because the algorithm is Markovian, it has no past memory, so a jump
+proposed into a model from outside can not access information from
+earlier in the chain which may identify a posterior peak.
 
-The most promising solution to this problem is to identify a good jump proposal distribution in advance, by exploiting information from single-model MCMCs to generate efficient jump proposal distributions for our reversible jump MCMC.  (Single-model MCMCs can take small local jumps within their model, meaning that they are much less likely than an RJMCMC to lose a high-posterior mode once it has been located.)  The ideal jump proposal distribution for the parameters within a model would consist of the posterior PDF for those parameters, $p(\vtheta_i|M_i,d)$, and single-model MCMCs already represent samples from these posterior PDFs.  However, they are discrete, and so must be interpolated so that any location in the ``super-model'' parameter space can be reached.  The novel strategy we propose for efficiently interpolating a discretely sampled PDF is described in the next section.
+The way to solve this problem is to identify a good jump proposal
+distribution in advance, by exploiting information from single-model
+MCMCs to generate efficient jump proposal distributions for our
+reversible jump MCMC.  (Single-model MCMCs can take small local jumps
+within their model, meaning that they are much less likely than an
+RJMCMC to lose a high-posterior mode once it has been located.)  The
+ideal jump proposal distribution for the parameters within a model
+would consist of the posterior PDF for those parameters,
+$p(\vtheta_i|M_i,d)$, and single-model MCMCs already represent samples
+from these posterior PDFs.  However, the samples are discrete, and a
+jump proposal must be continuous.  Therefore, the output of each
+single-model MCMC must be interpolated to construct the desired jump
+proposal.  The novel strategy we propose for efficiently interpolating
+a discretely sampled PDF is described in the next section.
 
 \section{kD Trees and Interpolation}
+\label{sec:kDTree}
+
+From the set of points output by a single-model MCMC,
+$\{\vtheta_i^{(j)} | j = 1, 2, \ldots \}$, all lying in the $M_i$
+parameter space, we would like to construct a set of ``neighborhoods''
+associated with each of the sample points.  The neighborhoods should
+be non-overlapping and fill parameter space.  
 
 \ilya{Mention example of bricks from \cite{Littenberg2009}.}
 
