@@ -222,22 +222,21 @@ a discretely sampled PDF is described in the next section.
 \section{kD Trees and Interpolation}
 \label{sec:kDTree}
 
-From the set of points output by a single-model MCMC,
-$\{\vtheta_i^{(j)} | j = 1, 2, \ldots \}$, all lying in the $M_i$
-parameter space, we would like to construct a set of ``neighborhoods''
-associated with each of the sample points.  The neighborhoods should
-be non-overlapping and fill parameter space.  To draw a proposed jump
-from an approximation to the model PDF, we select a point uniformly
-from the $\vtheta^{(j)}_i$, find its associated neighborhood, and then
-draw the proposed jump uniformly from the neighborhood.  Since the
-MCMC points are distributed according to the posterior PDF for $M_i$,
+The problem of drawing a proposed jump from an interpolation of
+single-model MCMC points can be thought of as the problem of assigning
+a local ``neighborhood'' to each point in the chain of MCMC samples.
+These neighborhoods should be non-overlapping and fill parameter
+space.  To draw a proposed jump, we select a point uniformly from the
+MCMC samples, find its associated neighborhood, and then draw the
+proposed jump uniformly from the neighborhood.  Since the MCMC points
+are distributed according to the posterior PDF for the single model,
 this procedure produces proposed jumps that are approximately
 distributed according to the posterior PDF.  In fact, the proposed
 jumps are drawn from a piecewise-constant (i.e.\ constant on each
-neighborhood) interpolation of the PDF.
+neighborhood) interpolation of the PDF.  There are various techniques
+that could be used to construct the set of neighborhoods associated
+with each point.
 
-There are various techniques that could be used to construct the set
-of neighborhoods associated with each point.
 Ref.~\cite{Littenberg2009} decomposed parameter space into
 constant-volume ``bricks'' whose size was set by the typical size of
 the peaks of the PDF.  Each point was associated with the brick that
@@ -245,7 +244,54 @@ contained it.  Unfortunately, this process does not guarantee that
 every brick contains at least one point, which is required for the
 jump proposal to cover the entire model parameter space.  The solution
 to this problem was to add a uniform distribution to the proposal PDF,
-in the form of one ``fictitious'' point per brick.  
+in the form of one ``fictitious'' point per brick.  The extra uniform
+distribution from the fictituous points represents a significant cost,
+since inter-model jumps proposed from the uniform distribution are
+unlikely to be accepted.  Additionally, the bricks in this algorithm
+do not adapt to the local structure of the PDF.  One must either use
+small bricks to capture the local structure of the PDF, placing many
+bricks in regions without MCMC samples, or use large bricks, missing
+the local strucutre of the PDF in exchange for fewer empty bricks.
+
+An alternate technique for producing adaptive neighborhoods would be
+to use the Voronoi regions associated with each MCMC sample.  The
+Voronoi region associated with a sample contains all the parameter
+space points that are closer to that sample than any other sample.
+The Voronoi region decomposition into neighborhoods is, in a sense,
+maximally adaptive, in contrast to the approach of
+Ref.~\cite{Littenberg2009}, which is minimally adaptive.
+Unfortunately, defining the Voronoi regions requires a metric on
+parameter space, which may be difficult or impossible to define.  A
+larger difficulty with the Voronoi approach is that the computational
+cost for computing the Voronoi regions for $N$ points increases
+rapidly with dimension, $d$, as $N^X$ \will{Find X in the literature;
+  add references.  I think it's $X = d/2$}.
+
+We propose to use a decomposition of parameter space into
+neighborhoods based on a datastructure called a kD-tree
+\will{References.}.  The decomposition is more adaptive than the cells
+of Ref.~\cite{Littenberg2009}, and more efficient in high dimension
+than the Voronoi decomposition.  
+
+A kD-tree is a binary, space-partitioning tree.  To partition a set of
+points into a kD-tree, begin by placing them in a rectangular box that
+contains all of parameter space.  Then proceed recursively:
+\begin{enumerate}
+\item If the given box contains exactly one point, stop; this is a
+  leaf of the tree.  Otherwise:
+\item Choose a dimension along which to divide the points.  Divide the
+  points in half along this dimension (or nearly in half, if the
+  number of points is odd), forming two sub-boxes.  The ``left''
+  sub-box contains the half (or nearly half) of the points that have
+  small coordinates along the chosen dimension; the ``right'' sub-box
+  contains the half (or nearly half) of the points that have large
+  coordinates along the chosen dimension.
+\item Return to step 1 with each of the sub-boxes.
+\end{enumerate}
+
+
+
+
 
 \section{RJMCMC Efficiency}
 
