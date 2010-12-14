@@ -1,18 +1,23 @@
+LATEX = pdflatex
+BIBTEX = bibtex
+EPSTOPDF = epstopdf
+
 EPSFILES = $(wildcard *.eps)
 PDFFILES = $(patsubst %.eps,%.pdf,$(EPSFILES))
 
 paper.pdf: paper.tex paper.bib $(PDFFILES)
-	pdflatex paper
-	bibtex paper
-	pdflatex paper
+	$(LATEX) paper
+	$(BIBTEX) paper
+	$(LATEX) paper
+	$(LATEX) paper
 
 .PHONY: latex
 latex: 
-	pdflatex paper
+	$(LATEX) paper
 
 .PHONY: bibtex
 bibtex:
-	bibtex paper
+	$(BIBTEX) paper
 
 %.pdf: %.eps
-	epstopdf $<
+	$(EPSTOPDF) $<
