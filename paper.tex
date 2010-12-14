@@ -37,32 +37,33 @@
 \affiliation{MIT Kavli Institute; and University of Birmingham, UK}
 
 \begin{abstract}
-\ilya{Add physics/astro motivation}
-  Reversible-jump Markov chain monte carlo (RJMCMC) is an extremely
-  powerful technique for performing Bayesian model selection, but it
-  suffers from a fundamental difficulty: it requires jumps between
-  model parameter spaces, but cannot retain a memory of the favored
-  locations in more than one parameter space at a time.  Thus, a naive
-  jump between parameter spaces is unlikely to be accepted in the MCMC
-  algorithm and convergence is correspondingly slow.  Here we
-  demonstrate an interpolation technique that uses samples from
-  single-model MCMCs to propose inter-model jumps from an
-  approximation to the single-model posterior of the target parameter
-  space.  The interpolation technique, based on a kD-tree
-  data structure, is adaptive and efficient in arbitrary dimensions.
-  We show that our technique leads to dramatically improved convergence
-  over naive jumps in an RJMCMC, and compare it to other proposals in
-  the literature to improve the convergence of RJMCMCs.  We also
-  discuss the use of the same interpolation technique in two other
-  contexts: as a convergence test for a single-model MCMC and as a way
-  to construct efficient ``global'' proposal distributions for
-  single-model MCMCs without prior knowledge of the structure of the
-  posterior distribution.
+  \ilya{Add physics/astro motivation} Reversible-jump Markov chain
+  monte carlo (RJMCMC) is an extremely powerful technique for
+  performing Bayesian model selection, but it suffers from a
+  fundamental difficulty: it requires jumps between model parameter
+  spaces, but cannot retain a memory of the favored locations in more
+  than one parameter space at a time.  Thus, a naive jump between
+  parameter spaces is unlikely to be accepted in the MCMC algorithm
+  and convergence is correspondingly slow.  Here we demonstrate an
+  interpolation technique that uses samples from single-model MCMCs to
+  propose inter-model jumps from an approximation to the single-model
+  posterior of the target parameter space.  The interpolation
+  technique, based on a kD-tree data structure, is adaptive and
+  efficient in arbitrary dimensions.  We show that our technique leads
+  to dramatically improved convergence over naive jumps in an RJMCMC,
+  and compare it to other proposals in the literature to improve the
+  convergence of RJMCMCs.  We also discuss the use of the same
+  interpolation technique in two other contexts: as a convergence test
+  for a single-model MCMC and as a way to construct efficient
+  ``global'' proposal distributions for single-model MCMCs without
+  prior knowledge of the structure of the posterior distribution.
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
+
+\will{Mention Weinberg direct integration (Ref.~\cite{Weinberg2009}).}
 
 \section{Reversible Jump MCMC}
 
@@ -70,32 +71,57 @@ Reversible jump Markov chain Monte Carlo (RJMCMC) \cite{Green1995} is a techniqu
 
 \subsection{Bayesian analysis}
 
-Consider an observed data set $d$ and a set of competing models for the data, indexed by an integer $i$: $\{M_i | i = 1, 2, \ldots \}$.  Each model has some continuous parameters, $\vtheta_i$; given the model and its parameters, we can make a prediction about the likelihood of observing
-the experimental data: $L(d|\vtheta_i, M_i)$.  Within the framework of each model, Bayes' rule gives us a way to compute the posterior probability distribution function (PDF) for the model
-parameters implied by the data:
-\begin{equation}
+Consider an observed data set $d$ and a set of competing models for
+the data, indexed by an integer $i$: $\{M_i | i = 1, 2, \ldots \}$.
+Each model has some continuous parameters, $\vtheta_i$; given the
+model and its parameters, we can make a prediction about the
+likelihood of observing the experimental data: $L(d|\vtheta_i, M_i)$.
+Within the framework of each model, Bayes' rule gives us a way to
+compute the posterior probability distribution function (PDF) for the
+model parameters implied by the data:
+\be
   p(\vtheta_i | d, M_i) = \frac{L(d|\vtheta_i, M_i) p(\vtheta_i|M_i)}{p(d|M_i)},
-\end{equation}
+\ee
 where $p(\vtheta_i |d, M_i)$ is the posterior distribution for the
 model parameters $\vtheta_i$ implied by the data in the context of
-model $M_i$, $p(\vtheta_i|M_i)$ is the prior
-probability of the model parameters that 
-represents our beliefs before accumulating any of the data $d$, and
-$p(d|M_i)$, called the evidence, is an overall normalizing constant that ensures that $p(\vtheta_i|d,M_i)$ is properly normalized as a probability distribution on
-the $\vtheta_i$.  This implies that the evidence is equal to
+model $M_i$, $p(\vtheta_i|M_i)$ is the prior probability of the model
+parameters that represents our beliefs before accumulating any of the
+data $d$, and $p(d|M_i)$, called the evidence, is an overall
+normalizing constant that ensures that $p(\vtheta_i|d,M_i)$ is
+properly normalized as a probability distribution on the $\vtheta_i$.
+This implies that the evidence is equal to
 \bel{evidence}
   p(d|M_i) = \int_{V_i} d\vtheta_i L(d|\vtheta_i, M_i) p(\vtheta_i|M_i),
-\end{equation}
-where $V_i$ is the parameter space volume in model $M_i$.  We are interested in the evidence for model $M_i$ given the data, $p(M_i|d)$, which is again given by Bayes' rule as
-\begin{equation}
+\ee
+where $V_i$ is the parameter space volume in model $M_i$.  For model
+comparison, we are interested in the posterior probability of a
+particular model, $M_i$, given the data, $p(M_i|d)$.  Using Bayes'
+rule, we see that this involves the evidence (Eq.~\eqref{evidence}):
+\be
 p(M_i|d) = \frac{p(d|M_i) p(M_i)}{p(d)},
-\end{equation}
-where $p(M_i)$ is our a priori belief in model $M_i$ and $p(d)$ is a normalizing constant, 
+\ee
+where $p(M_i)$ is our a priori belief in model $M_i$ and $p(d)$ is a
+normalizing constant,
 \be
 p(d)=\sum_i p(d|M_i) p(M_i).
 \ee
 
-When selecting among alternative models, we are interested in finding the model with the highest evidence $p(M_i|d)$.  However, attempts to directly compute the evidence by performing the integration in Eq.~(\ref{evidence}) are generally very difficult in a multi-dimensional, multi-modal parameter space when the likelihood has to be evaluated numerically.  In particular, a grid-based integral quickly becomes computationally unfeasible as the dimensionality of $\vtheta$ exceeds a few.  The parameter space must typically be explored in a stochastic manner before the evidence integral can be computed.  Although several stochastic parameter-exploration techniques are focused directly on evidence computation (e.g., nested sampling and MultiNest \ilya {Add references}), we frequently want to compute the posterior PDFs within each model along with the evidences for the various models, and the Markov chain Monte Carlo is one of the most widely used tools for this purpose. 
+When selecting among alternative models, we are interested in finding
+the model with the highest posterior probability $p(M_i|d)$.  However,
+attempts to directly compute the evidence by performing the
+integration in Eq.~\eqref{evidence} are generally very difficult in a
+multi-dimensional, multi-modal parameter space when the likelihood has
+to be evaluated numerically.  In particular, a grid-based integral
+quickly becomes computationally unfeasible as the dimensionality of
+$\vtheta$ exceeds a few.  The parameter space must typically be
+explored in a stochastic manner before the evidence integral can be
+computed.  There are several stochastic parameter-exploration
+techniques focused directly on evidence computation (e.g., nested
+sampling and MultiNest \ilya {Add references}).  However, we
+frequently want to compute the posterior PDFs within each model along
+with the evidences for the various models.  One of the most common
+techniques for computing posterior PDFs in the context of a model is
+the Markov Chain Monte Carlo, which we now describe.
 
 \subsection{MCMC} \label{sec:mcmc}
 
