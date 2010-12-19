@@ -19,6 +19,19 @@
 
 \newcommand{\order}[1]{\mathcal{O}\left( #1 \right)}
 
+\def\aj{Astronomical Journal}                 % Astronomical Journal
+\def\apj{Astrophysical Journal}                % Astrophysical Journal
+\def\apjl{Astrophysical Journal}             % Astrophysical Journal, Letters
+\def\pasj{PASJ}
+\def\apjs{ApJS}              % Astrophysical Journal, Supplement
+\def\mnras{MNRAS}            % Monthly Notices of the RAS
+\def\prd{Phys.~Rev.~D}       % Physical Review D
+\def\prl{Phys.~Rev.~Lett}    % Physical Review Letters
+\def\cqg{Class.~Quant.~Grav.~}%Classical and Quantum Gravity
+\def\araa{ARA\&A}             % Annual Review of Astron and Astrophys
+\def\nat{Nature}              % Nature
+\def\aap{A\&A}                % Astronomy and Astrophysics
+
 \bibliographystyle{h-physrev}
 
 \begin{document}
@@ -39,7 +52,7 @@
 \affiliation{MIT Kavli Institute; and University of Birmingham, UK}
 
 \begin{abstract}
-  \ilya{Add physics/astro motivation} Reversible-jump Markov chain
+  Selection among alternative theoretical models given an observed data set is an important challenge in many areas of physics and astronomy, ranging from gravitational-wave data analysis to measurements of black-hole masses in X-ray binaries.  Reversible-jump Markov chain
   monte carlo (RJMCMC) is an extremely powerful technique for
   performing Bayesian model selection, but it suffers from a
   fundamental difficulty: it requires jumps between model parameter
@@ -121,7 +134,7 @@ $\vtheta$ exceeds a few.  The parameter space must typically be
 explored in a stochastic manner before the evidence integral can be
 computed.  There are several stochastic parameter-exploration
 techniques focused directly on evidence computation (e.g., nested
-sampling and MultiNest \ilya {Add references}).  However, we
+sampling \cite{Skilling:2006} and MultiNest \cite{Feroz:2009}).  However, we
 frequently want to compute the posterior PDFs within each model along
 with the evidences for the various models.  One of the most common
 techniques for computing posterior PDFs in the context of a model is
@@ -129,30 +142,27 @@ the Markov Chain Monte Carlo, which we now describe.
 
 \subsection{MCMC} \label{sec:mcmc}
 
-\will{Here $i$ should become $j$ (or some other index), because we
-  have used $i$ already to denote the model.}
-
-A Markov chain Monte Carlo produces a set of samples $\{ \vtheta^{(i)} \, | \, i = 1, \ldots \}$ from the model parameter space that are sampled according to the posterior, meaning that, in the limit that the chain length tends to infinity, the relative frequency with which a given set of parameter appears in the chain is proportional to the desired posterior, $p(\vtheta|d,M)$.  Therefore, the output of an MCMC can be directly interpreted as the posterior PDF over the full parameter space, while PDFs for individual parameters can be obtained through trivially marginalizing over the uninteresting parameters, simply by considering the distribution of the parameter of interest in the MCMC samples.
+A Markov chain Monte Carlo \cite{Gilks:1996} produces a set of samples $\{ \vtheta^{(j)} \, | \, i = 1, \ldots \}$ from the model parameter space that are sampled according to the posterior, meaning that, in the limit that the chain length tends to infinity, the relative frequency with which a given set of parameter appears in the chain is proportional to the desired posterior, $p(\vtheta|d,M)$.  Therefore, the output of an MCMC can be directly interpreted as the posterior PDF over the full parameter space, while PDFs for individual parameters can be obtained through trivially marginalizing over the uninteresting parameters, simply by considering the distribution of the parameter of interest in the MCMC samples.
 
 A Markov chain has the property that the probability distribution of the next state can depend only on the current state, not on the past history:
 \be
-p(\vtheta^{(i+1)})=\int_{V} d\vtheta^{i} p(\vtheta^{(i)} \to \vtheta^{(i+1)}) p(\vtheta^{(i+1)}),
+p(\vtheta^{(j+1)})=\int_{V} d\vtheta^{(j)} p(\vtheta^{(j)} \to \vtheta^{(j+1)}) p(\vtheta^{(j)}),
 \ee
-where $p(\vtheta^{(i)} \to \vtheta^{(i+1)})$ depends only on $\vtheta^{(i)}$ and $\vtheta^{(i+1)}$. 
-An additional requirement for an MCMC arises from the fact that the desired distribution is the equilibrium distribution.  In other words, if we assume that state $(i)$ of the chain is sampled from the desired PDF, $p(\vtheta^{(i)})=p(\vtheta|d,M)$ , then the next state $(i+1)$ must be sampled from the PDF as well, so that $p(\vtheta^{(i+1)})=p(\vtheta|d,M)$.  
+where the jump probability $p(\vtheta^{(j)} \to \vtheta^{(j+1)})$ depends only on $\vtheta^{(j)}$ and $\vtheta^{(j+1)}$. 
+An additional requirement for an MCMC arises from the fact that the desired distribution is the equilibrium distribution.  In other words, if we assume that state $(j)$ of the chain is sampled from the desired PDF, $p(\vtheta^{(j)})=p(\vtheta|d,M)$ , then the next state $(j+1)$ must be sampled from the PDF as well, so that $p(\vtheta^{(j+1)})=p(\vtheta|d,M)$.  
 
 One way to produce such a sequence of samples is via the Metropolis-Hastings algorithm, first proposed by Metropolis et al.~in 1953 \cite{Metropolis:1953}, and later generalized by Hastings:
 \begin{enumerate}
-  \item Given a current state $\vtheta^{(i)}$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^{(i)} \to \vtheta^p)$.  
+  \item Given a current state $\vtheta^{(j)}$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^{(j)} \to \vtheta^p)$.  
   \item Compute the probability of accepting the proposed jump as
 \bel{eq:p-accept}
-p_{\textnormal{accept}}  \equiv \min\Bigl(1,  \frac{p(\vtheta^p|d)}{p(\vtheta^{(i)}|d)} \frac{Q(\vtheta^p \to
-        \vtheta^{(i)})}{Q(\vtheta^{(i)} \to \vtheta^p)} \Bigr).
+p_{\textnormal{accept}}  \equiv \min\Bigl(1,  \frac{p(\vtheta^p|d)}{p(\vtheta^{(j)}|d)} \frac{Q(\vtheta^p \to
+        \vtheta^{(j)})}{Q(\vtheta^{(j)} \to \vtheta^p)} \Bigr).
 \ee
-\item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<  p_{\textnormal{accept}}$, accept the proposed jump, setting $\vtheta^{(i+1)}=\vtheta^p$.  Otherwise, reject the jump, and remain at the same location in parameter space for the next step, $\vtheta^{(i+1)}=\vtheta^{(i)}$.
+\item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<  p_{\textnormal{accept}}$, accept the proposed jump, setting $\vtheta^{(j+1)}=\vtheta^p$.  Otherwise, reject the jump, and remain at the same location in parameter space for the next step, $\vtheta^{(j+1)}=\vtheta^{(j)}$.
  \end{enumerate}
  
-This jump proposal distribution $Q(\vtheta^{(i)} \to \vtheta^p)$ can depend on the parameters of the current state $\vtheta^{(i)}$, but not on the past history.  It must also allow any state within the allowed prior volume to be reachable by the MCMC.  Beyond these conditions, there is obviously a great deal of freedom in choosing the jump proposal distribution.  This is the most important choice in the MCMC, as it determines the sampling efficiency of the algorithm, i.e., the necessary length of the chain before it converges to the posterior PDF.  Creating an efficient jump proposal distribution requires an understanding of the structure of the parameter space which may not be available until the PDFs are found, creating a Catch-22; one possibility for resolving this infinite loop is described in Section \ref{sec:examples}.
+This jump proposal distribution $Q(\vtheta^{(j)} \to \vtheta^p)$ can depend on the parameters of the current state $\vtheta^{(j)}$, but not on the past history.  It must also allow any state within the allowed prior volume to be reachable by the MCMC.  Beyond these conditions, there is obviously a great deal of freedom in choosing the jump proposal distribution.  This is the most important choice in the MCMC, as it determines the sampling efficiency of the algorithm, i.e., the necessary length of the chain before it converges to the posterior PDF.  Creating an efficient jump proposal distribution requires an understanding of the structure of the parameter space which may not be available until the PDFs are found, creating a Catch-22; one possibility for resolving this infinite loop is described in Section \ref{sec:examples}.
 
 It should be noted that although an MCMC who jump acceptance criterium obeys detailed balance (as the Metropolis-Hastings algorithm does) must eventually converge to the desired distribution, there is no way to guarantee convergence in a fixed number of steps or to test whether a chain has converged in a foolproof manner.  For example, MCMC chains can get stuck on local maxima, and if the autocorrelation length of the chain represents a substantial fraction of the total number of samples, the effective sample size may be too small to accurately represent the relative sizes of the modes in the PDF (however, see Section \ref{sec:examples} for one intriguing suggestion for remedying this issue).   
 
@@ -163,9 +173,7 @@ Finally, we note that, in practice, the randomly chosen initial starting point o
 The samples produced during by an MCMC algorithm can be used to
 directly perform a Monte Carlo evidence integral.  This results in a
 harmonic mean estimator for the evidence, which suffers from a large
-variance and a possible bias\will{Ilya: Can you add citations here for
-  the suckiness of HM?}.  Additional techniques for the direct
-integration of evidence, also based on a kD tree decomposition of the
+variance and a possible bias \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  Additional techniques for the direct integration of evidence, also based on a kD tree decomposition of the
 parameter space (see Sec.~\ref{sec:kDTree}), are described in
 \cite{Weinberg2009}.  These techniques are promising, but in some
 cases suffer \cite{Farr2010} from large variance and bias as well.  An
