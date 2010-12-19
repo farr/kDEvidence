@@ -377,17 +377,17 @@ with being drawn from the distribution of the combined population
 \cite{Farr2010}.
 
 Gravitational-wave astronomy provides the setting for another ongoing
-study.  Interesting triggers from the LIGO and Virgo
+study.  Interesting triggers from the LIGO \cite{InitLIGO} and Virgo \cite{Virgo}
 gravitational-wave detector pipeline that searches for compact binary
-coalescences are followed up with Bayesian parameter estimation tools.
+coalescences are followed up with Bayesian parameter estimation tools (see, e.g., \cite{Rover:2006ni, vanderSluys:2008b, VeitchVecchio:2009}).
 In general, several possible models for the data are considered,
 including a pure noise model, noise superimposed on a non-spinning
 gravitational-wave signal, or noise superimposed on a gravitational
 wave signal that includes significant spin or spins in the binary
 components.  The models can include a large number of parameters (up
-to 15 for the model with two spinning components), and RJMCMC with
+to 15 for the model with two spinning components \cite{Raymond:2010}), and RJMCMC with
 interpolation via kD trees is again successful at computing the model
-evidences. \ilya{Add references throughout this paragraph.}
+evidences. 
 
 As discussed in Section \ref{sec:mcmc}, finding an efficient jump proposal distribution can be a challenge even for a single-model MCMC.  This is particularly difficult when the parameter space is multi-modal, in which case the Markov chain can get stuck on individual high-likelihood islands in the parameter space.  Traversals of low-likelihood oceans by a series of short jumps are extremely unlikely, and random long jumps are almost always rejected, making sampling very inefficient.  Ideally, an analytical understanding of the model that would give a glimpse of the structure of the archipelago of islands would allow for the creation of jump proposal distributions that combine short jumps designed to explore individual islands with directed long jumps that are likely to end up on neighboring islands.  However, it is not always possible to gain such understanding short of performing the MCMC itself.  One solution lies in running multiple chains that explore the parameter space, perhaps getting stuck on local maxima, and then combining the points and interpolating with a kD tree to create a jump proposal distribution.  Although the chains in the first iteration will not have converged, and the relative sizes of the modes will not be accurately known, this will ensure that all of the modes (islands) are at least included in the jump proposal distribution for a second stage, greatly improving its efficiency.  Other modifications to this technique, which we are currently investigating, include multiple iterative stages, with the interpolated samples from each previous stage used as a jump proposal distribution for the next stage, until the posterior PDF is read off from the final stage; and the use of higher temperatures in the early-stage chains to improve sampling.
 
