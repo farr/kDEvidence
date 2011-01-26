@@ -52,26 +52,30 @@
 \affiliation{MIT Kavli Institute; and University of Birmingham, UK}
 
 \begin{abstract}
-  Selection among alternative theoretical models given an observed data set is an important challenge in many areas of physics and astronomy, ranging from gravitational-wave data analysis to measurements of black-hole masses in X-ray binaries.  Reversible-jump Markov chain
-  Monte Carlo (RJMCMC) is an extremely powerful technique for
-  performing Bayesian model selection, but it suffers from a
-  fundamental difficulty: it requires jumps between model parameter
-  spaces, but cannot retain a memory of the favored locations in more
-  than one parameter space at a time.  Thus, a naive jump between
-  parameter spaces is unlikely to be accepted in the MCMC algorithm
-  and convergence is correspondingly slow.  Here we demonstrate an
-  interpolation technique that uses samples from single-model MCMCs to
-  propose inter-model jumps from an approximation to the single-model
-  posterior of the target parameter space.  The interpolation
-  technique, based on a kD-tree data structure, is adaptive and
-  efficient in arbitrary dimensions.  We show that our technique leads
-  to dramatically improved convergence over naive jumps in an RJMCMC,
-  and compare it to other proposals in the literature to improve the
-  convergence of RJMCMCs.  We also discuss the use of the same
-  interpolation technique in two other contexts: as a convergence test
-  for a single-model MCMC and as a way to construct efficient
-  ``global'' proposal distributions for single-model MCMCs without
-  prior knowledge of the structure of the posterior distribution.
+  Selection among alternative theoretical models given an observed
+  data set is an important challenge in many areas of physics and
+  astronomy, ranging from gravitational-wave data analysis to
+  measurements of black-hole masses in X-ray binaries.
+  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an extremely
+  powerful technique for performing Bayesian model selection, but it
+  suffers from a fundamental difficulty: it requires jumps between
+  model parameter spaces, but cannot retain a memory of the favored
+  locations in more than one parameter space at a time.  Thus, a naive
+  jump between parameter spaces is unlikely to be accepted in the MCMC
+  algorithm and convergence is correspondingly slow.  Here we
+  demonstrate an interpolation technique that uses samples from
+  single-model MCMCs to propose inter-model jumps from an
+  approximation to the single-model posterior of the target parameter
+  space.  The interpolation technique, based on a kD-tree data
+  structure, is adaptive and efficient in arbitrary dimensions.  We
+  show that our technique leads to dramatically improved convergence
+  over naive jumps in an RJMCMC, and compare it to other proposals in
+  the literature to improve the convergence of RJMCMCs.  We also
+  discuss the use of the same interpolation technique in two other
+  contexts: as a convergence test for a single-model MCMC and as a way
+  to construct efficient ``global'' proposal distributions for
+  single-model MCMCs without prior knowledge of the structure of the
+  posterior distribution.
 \end{abstract}
 
 \maketitle
@@ -164,23 +168,44 @@ p_{\textnormal{accept}}  \equiv \min\Bigl(1,  \frac{p(\vtheta^p|d)}{p(\vtheta^{(
  
 This jump proposal distribution $Q(\vtheta^{(j)} \to \vtheta^p)$ can depend on the parameters of the current state $\vtheta^{(j)}$, but not on the past history.  It must also allow any state within the allowed prior volume to be reachable by the MCMC.  Beyond these conditions, there is obviously a great deal of freedom in choosing the jump proposal distribution.  This is the most important choice in the MCMC, as it determines the sampling efficiency of the algorithm, i.e., the necessary length of the chain before it converges to the posterior PDF.  Creating an efficient jump proposal distribution requires an understanding of the structure of the parameter space which may not be available until the PDFs are found, creating a Catch-22; one possibility for resolving this infinite loop is described in Section \ref{sec:examples}.
 
-It should be noted that although an MCMC who jump acceptance criterium obeys detailed balance (as the Metropolis-Hastings algorithm does) must eventually converge to the desired distribution, there is no way to guarantee convergence in a fixed number of steps or to test whether a chain has converged in a foolproof manner.  For example, MCMC chains can get stuck on local maxima, and if the autocorrelation length of the chain represents a substantial fraction of the total number of samples, the effective sample size may be too small to accurately represent the relative sizes of the modes in the PDF (however, see Section \ref{sec:examples} for one intriguing suggestion for remedying this issue).   
+It should be noted that although an MCMC whose jump acceptance
+criterium obeys detailed balance (as the Metropolis-Hastings algorithm
+does) must eventually converge to the desired distribution, there is
+no way to guarantee convergence in a fixed number of steps or to test
+whether a chain has converged in a foolproof manner.  For example,
+MCMC chains can get stuck on local maxima, producing an apparently
+well-converged sampling of the PDF in the vicinity of the maximum; or,
+if the chain visits a sequence of local maxima, moving rarely between
+maxima, the autocorrelation length of the chain may represent a
+substantial fraction of the total number of samples, resulting in an
+effective sample size that is too small to accurately represent the
+relative sizes of the modes in the PDF (however, see Section
+\ref{sec:examples} for one intriguing suggestion for remedying this
+issue).
 
-Finally, we note that, in practice, the randomly chosen initial starting point of the MCMC may be in a particularly unlikely location in the parameter space.  Because jumps are frequently local, we will generally want to ignore the first few autocorrelation lengths worth of points in a finite-size chain to avoid biases in the recovered posterior PDF due to the choice of the initial location.  The points thus discarded are referred to as "burn-in" points.
+Finally, we note that, in practice, the randomly chosen initial
+starting point of the MCMC may be in a particularly unlikely location
+in the parameter space.  Because jumps are frequently local, we will
+generally want to ignore the first few autocorrelation lengths worth
+of points in a finite-size chain to avoid biases in the recovered
+posterior PDF due to the choice of the initial location.  The points
+thus discarded are referred to as "burn-in" points.
 
 \subsection{RJMCMC}
 
 The samples produced during by an MCMC algorithm can be used to
 directly perform a Monte Carlo evidence integral.  This results in a
 harmonic mean estimator for the evidence, which suffers from a large
-variance and a possible bias \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  Additional techniques for the direct integration of evidence, also based on a kD tree decomposition of the
-parameter space (see Sec.~\ref{sec:kDTree}), are described in
-\cite{Weinberg2009}.  These techniques are promising, but in some
-cases suffer \cite{Farr2010} from large variance and bias as well.  An
-alternative approach to model selection among a set of models is based
-on performing an MCMC in a ``super-model'' that encompasses all of the
-models under consideration; this is known the the Reversible Jump
-Markov chain Monte Carlo (RJMCMC).
+variance and a possible bias
+\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  Additional
+techniques for the direct integration of evidence, also based on a kD
+tree decomposition of the parameter space (see Sec.~\ref{sec:kDTree}),
+are described in \cite{Weinberg2009}.  These techniques are promising,
+but in some cases suffer \cite{Farr2010} from large variance and bias
+as well.  An alternative approach to model selection among a set of
+models is based on performing an MCMC in a ``super-model'' that
+encompasses all of the models under consideration; this is known the
+the Reversible Jump Markov chain Monte Carlo (RJMCMC).
 
 The parameter space of the super-model in an RJMCMC consists of a
 discrete parameter that identifies the model, $M_i$, and a set of
