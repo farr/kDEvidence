@@ -263,18 +263,18 @@ a discretely sampled PDF is described in the next section.
 The problem of drawing a proposed jump from an interpolation of
 single-model MCMC points can be thought of as the problem of assigning
 a local ``neighborhood'' to each point in the chain of MCMC samples.
-These neighborhoods should be non-overlapping and fill parameter
-space.  \ilya{I don't think this is generic enough: for example, Littenberg and Cornish also constructed an interpolation, but one in which multiple points could be in the same "neighborhood", while other neighborhoods could be empty. I.e., the algorithm below is one way of solving this problem, but not an alternative statement of it.}
-To draw a proposed jump, we select a point uniformly from the
+We choose these neighborhoods to be non-overlapping and fill parameter
+space.  To draw a proposed jump, we select a point uniformly from the
 MCMC samples, find its associated neighborhood, and then draw the
 proposed jump uniformly from the neighborhood.  Since the MCMC points
 are distributed according to the posterior PDF for the single model,
 this procedure produces proposed jumps that are approximately
-distributed according to the posterior PDF. \ilya{This last statement is presumably only true if the size of the neighborhood associated with each point is roughly the inverse of the local point density.  I think it's worthwhile to point that out that your kD trees allow you to just that in a computationally efficient manner.}  In fact, the proposed
-jumps are drawn from a piecewise-constant (i.e.\ constant on each
-neighborhood) interpolation of the PDF.  There are various techniques
-that could be used to construct the set of neighborhoods associated
-with each point.
+distributed according to the posterior PDF.  In other words, the size
+of a neighborhood is inversely proportional to the local point
+density.  The proposed jumps are drawn from a piecewise-constant
+(i.e.\ constant on each neighborhood) interpolation of the PDF.  There
+are various techniques that could be used to construct the set of
+neighborhoods associated with each point.
 
 Ref.~\cite{Littenberg2009} decomposed parameter space into
 constant-volume ``bricks'' whose size was set by the typical size of
@@ -302,15 +302,15 @@ Ref.~\cite{Littenberg2009}, which is minimally adaptive.
 Unfortunately, defining the Voronoi regions requires a metric on
 parameter space, which may be difficult or impossible to define.  A
 larger difficulty with the Voronoi approach is that the computational
-cost for computing the Voronoi regions for $N$ points increases
-rapidly with dimension, $d$, as $N^X$ \will{Find X in the literature;
-  add references.  I think it's $X = d/2$}.
+cost for computing the Voronoi regions increases rapidly with
+dimension.  % Apparently the exact computational cost is not known in
+            % arbitrary dimension.
 
 We propose to use a decomposition of parameter space into
-neighborhoods based on a datastructure called a kD-tree
-\will{References.}.  The decomposition is more adaptive than the cells
-of Ref.~\cite{Littenberg2009}, and more efficient in high dimension
-than the Voronoi decomposition.  
+neighborhoods based on a datastructure called a kD-tree (see, e.g.\
+\cite{Berg2008} or \cite{Gaede1998}).  The decomposition is more
+adaptive than the cells of Ref.~\cite{Littenberg2009}, and more
+efficient in high dimension than the Voronoi decomposition.
 
 A kD-tree is a binary, space-partitioning tree.  To partition a set of
 points into a kD-tree, begin by placing them in a rectangular box that
@@ -335,10 +335,10 @@ $\order{n}$ time (see, e.g., Ref.~\cite{Press2007}).  If there are $N$
 points in total, there are $\order{\log N}$ levels in the tree; at
 each level, $\order{N}$ points must be processed once in the
 median-finding algorithm.  Tree construction thus costs $\order{N \log
-  N}$ in time, and the tree consumes $\order{N \log N}$ space.  As an illustration, box
-boundaries for a kD-tree constructed around a point set that is
-normally distributed around the origin in two dimensions are shown in
-Figure \ref{fig:kD-tree}.
+  N}$ in time, and the tree consumes $\order{N \log N}$ space.  As an
+illustration, box boundaries for a kD-tree constructed around a point
+set that is normally distributed around the origin in two dimensions
+are shown in Figure \ref{fig:kD-tree}.
 
 \begin{figure}
   \begin{center}
@@ -349,17 +349,17 @@ Figure \ref{fig:kD-tree}.
     about the origin in two dimensions.  As the points become denser
     around the origin, the typical neighborhood gets smaller.  The
     interpolated PDF within a box of volume $V_i$ is $1/(N V_i)$,
-    where $N$ is the total number of points (and boxes).}
+    where $N$ is the total number of points (which is also the number
+    of boxes).}
 \end{figure}
 
-In order to use the kD-tree interpolation in an MCMC, we must be able
-to quickly find the neighborhood associated with a given point.  This
-can be accomplished in $\order{\log N}$ time and constant space with
-the following algorithm.  Given the point, $\vtheta_i$ --- which could
-either be a point in the chain of MCMC samples if we are trying to
-propose a jump, or a previously proposed jump if we are trying to
-compute the jump probability distribution (see
-Eq.~\ref{eq:p-accept}) --- and the tree, $T$:
+In order to use the kD-tree interpolation as a jump proposal in an
+MCMC, we must be able to quickly find the neighborhood associated with
+a given point to compute the jump probability (see
+Eq.~\ref{eq:p-accept}).  This can be accomplished in $\order{\log N}$
+time and constant space with the following algorithm, which is a
+standard binary tree search.  Given the point, $\vtheta_i$ and the
+tree, $T$:
 \begin{enumerate}
 \item If $T$ contains exactly one sample point, then its box is the
   associated neighborhood.  Otherwise:
