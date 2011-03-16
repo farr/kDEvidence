@@ -275,9 +275,9 @@ depends only on $\vtheta^{(j)}$ and $\vtheta^{(j+1)}$.  An additional
 requirement for an MCMC arises from the fact that the desired
 distribution is the equilibrium distribution.  In other words, if we
 assume that state $(j)$ of the chain is sampled from the desired PDF,
-$p(\vtheta^{(j)})=p(\vtheta|d,M)$ , then the next state $(j+1)$ must
+$p(\vtheta^{(j)})=p(\vtheta^{(j)}|d,M)$ , then the next state $(j+1)$ must
 be sampled from the PDF as well, so that
-$p(\vtheta^{(j+1)})=p(\vtheta|d,M)$; this condition is known as
+$p(\vtheta^{(j+1)})=p(\vtheta^{(j+1)}|d,M)$; this condition is known as
 ``detailed balance.''
 
 One way to produce such a sequence of samples is via the
@@ -302,18 +302,17 @@ p_{\textnormal{accept}} \equiv \min\Bigl(1,
  
 This jump proposal distribution $Q(\vtheta^{(j)} \to \vtheta^p)$ can
 depend on the parameters of the current state $\vtheta^{(j)}$, but not
-on the past history.  It must also allow any state within the allowed
-prior volume to be reachable by the MCMC.  Any jump proposal that
-satisfies these properties is suitable for an MCMC.
+on the past history.  It must also allow any state within the prior
+volume to be reachable (eventually) by the MCMC.  Any jump proposal
+that satisfies these properties is suitable for an MCMC.
 
 The jump proposal is the most important choice in the MCMC, as it
-determines the sampling efficiency of the algorithm, i.e., the
-necessary length of the chain before it converges to the posterior
-PDF.  Creating an efficient jump proposal distribution requires an
-understanding of the structure of the parameter space which may not be
-available until the PDFs are found, creating a Catch-22; one
-possibility for resolving this infinite loop is described in Section
-\ref{sec:examples}.
+determines the sampling efficiency of the algorithm, i.e., the length
+of the chain before it converges to the posterior PDF.  Creating an
+efficient jump proposal distribution requires an understanding of the
+structure of the parameter space which may not be available until the
+PDFs are found, creating a Catch-22; one possibility for resolving
+this infinite loop is described in Section \ref{sec:examples}.
 
 It should be noted that although an MCMC whose jump acceptance
 criterium obeys detailed balance (as the Metropolis-Hastings algorithm
@@ -360,17 +359,19 @@ continuous parameters appropriate for that model, $\vtheta_i$.  Thus,
 each sample consists of a model identifier and a location within the
 parameter space of that model, $\{M_i, \vtheta_i\}$.  We perform the
 MCMC in the ``super-model'' parameter space just like a regular MCMC;
-in general, we can both propose jumps to different parameters within a
-model (intramodel jumps) and jumps to a different model with different
-parameters (intermodel jumps).  The resulting chain samples from the
-posterior $p(M_i,\vtheta_i|d)$.  As in a usual MCMC, the PDF on the
-model as a parameter, with other parameters ignored, is obtained by
-marginalizing over the remaining parameters.  If we assume uniform
-priors on the models, the evidence for a given model is proportional
-to the number of counts 
+we propose jumps to different parameters within a model (intramodel
+jumps) and jumps to a different model with different parameters
+(intermodel jumps).  The resulting chain samples from the posterior
+$p(M_i,\vtheta_i|d)$.  As in a usual MCMC, the PDF on the model as a
+parameter, with other parameters ignored, is obtained by marginalizing
+over the remaining parameters.  The posterior probability of a model
+is proportional to the number of counts
 %
 \be
-p(M_i|d) = \int d\vtheta_i p(M_i, \vtheta_i|d) \approx \frac{N_i}{N},
+%
+p(M_i|d) = \int d\vtheta_i \frac{p(d|M_i, \vtheta_i) p(M_i, \vtheta_i)}{p(d)}
+\approx \frac{N_i}{N},
+%
 \ee
 %
 where $N_i$ is the number of RJMCMC samples listing the $i$'th model
@@ -417,12 +418,12 @@ MCMC samples, find its associated neighborhood, and then draw the
 proposed jump uniformly from the neighborhood.  Since the MCMC points
 are distributed according to the posterior PDF for the single model,
 this procedure produces proposed jumps that are approximately
-distributed according to the posterior PDF.  In other words, the size
-of a neighborhood is inversely proportional to the local point
-density.  The proposed jumps are drawn from a piecewise-constant
-(i.e.\ constant on each neighborhood) interpolation of the PDF.  There
-are various techniques that could be used to construct the set of
-neighborhoods associated with each point.
+distributed according to the posterior PDF.  The size of a
+neighborhood is inversely proportional to the local point density.
+The proposed jumps are drawn from a piecewise-constant (constant on
+each neighborhood) interpolation of the PDF.  There are various
+techniques that could be used to construct the set of neighborhoods
+associated with each point.
 
 Ref.~\cite{Littenberg2009} decomposed parameter space into
 constant-volume ``bricks'' whose size was set by the typical size of
@@ -432,13 +433,14 @@ every brick contains at least one point, which is required for the
 jump proposal to cover the entire model parameter space.  The solution
 to this problem was to add a uniform distribution to the proposal PDF,
 in the form of one ``fictitious'' point per brick.  The extra uniform
-distribution from the fictituous points represents a significant cost,
-since inter-model jumps proposed from the uniform distribution are
-unlikely to be accepted.  Additionally, the bricks in this algorithm
-do not adapt to the local structure of the PDF.  One must either use
-small bricks to capture the local structure of the PDF, placing many
-bricks in regions without MCMC samples, or use large bricks, missing
-the local strucutre of the PDF in exchange for fewer empty bricks.
+distribution from the fictituous points can represent a significant
+cost, since inter-model jumps proposed from the uniform distribution
+are unlikely to be accepted.  Additionally, the bricks in this
+algorithm do not adapt to the local structure of the PDF.  One must
+either use small bricks to capture the local structure of the PDF,
+placing many bricks in regions without MCMC samples, or use large
+bricks, missing the local strucutre of the PDF in exchange for fewer
+empty bricks.
 
 An alternate technique for producing adaptive neighborhoods would be
 to use the Voronoi regions associated with each MCMC sample.  The
@@ -448,13 +450,13 @@ The Voronoi region decomposition into neighborhoods is, in a sense,
 maximally adaptive, in contrast to the approach of
 Ref.~\cite{Littenberg2009}, which is minimally adaptive.
 Unfortunately, defining the Voronoi regions requires a metric on
-parameter space, which may be difficult or impossible to define.  A
-larger difficulty with the Voronoi approach is that the computational
-cost for computing the Voronoi regions increases rapidly with
+parameter space, which may be difficult or impossible to define.
+Also, the computational cost for computing the Voronoi regions
+increases rapidly with
 dimension.  % Apparently the exact computational cost is not known in
             % arbitrary dimension.
 
-We propose to use a decomposition of parameter space into
+Here we propose to use a decomposition of parameter space into
 neighborhoods based on a datastructure called a kD-tree (see, e.g.\
 \cite{Berg2008} or \cite{Gaede1998}).  The decomposition is more
 adaptive than the cells of Ref.~\cite{Littenberg2009}, and more
@@ -519,6 +521,32 @@ tree, $T$:
 
 \section{RJMCMC Efficiency}
 \label{sec:efficiency}
+
+In this section, we demonstrate the efficiency of the kD-interpolated
+jump proposal on a toy model comparison problem.  We draw $N = 100$
+simulated data points from a $N(0,1)$ Gaussian distribution, and then
+ask whether these data are better described by a model where they are
+Gaussian distributed with unkonwn mean, $\mu$, and standard deviation,
+$\sigma$
+%
+\be
+p(x) = \frac{1}{\sqrt{2\pi} \sigma} \exp\left( - \frac{(x-\mu)^2}{2
+    \sigma^2} \right),
+\ee
+%
+or by a model where they are Cauchy distributed with mode $\alpha$,
+and width $\beta$
+%
+\be
+p(x) = \frac{1}{\pi \beta \left( 1 + \left(\frac{x - \alpha}{\beta}\right)^2\right)}.
+\ee
+%
+We take priors on $\mu$ and $\alpha$ to be uniform in $[-1,1]$, and
+priors in $\sigma$ and $\beta$ to be uniform in $[0.5, 1.5]$.  With a
+data set of 100 points, the relative uncertainty in determining the
+parameters of the underlying distribution is approximately 10\%, so we
+expect the posterior probabilities in the $(\mu,\sigma)$ and
+$(\alpha,\beta)$ spaces to occupy roughly 1\% of the prior volume.  
 
 \begin{figure}
   \begin{center}
