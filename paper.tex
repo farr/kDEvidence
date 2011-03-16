@@ -1,4 +1,4 @@
-\documentclass[prd,preprint]{revtex4}
+\documentclass[aps,prd,reprint]{revtex4-1}
 
 \usepackage{amsmath}
 \usepackage{hyperref}
@@ -32,7 +32,7 @@
 \def\nat{Nature}              % Nature
 \def\aap{A\&A}                % Astronomy and Astrophysics
 
-\bibliographystyle{h-physrev}
+\bibliographystyle{apsrev4-1}
 
 \begin{document}
 \title{An Efficient Interpolation Technique for Jump Proposals in
@@ -54,8 +54,9 @@
 \begin{abstract}
   Selection among alternative theoretical models given an observed
   data set is an important challenge in many areas of physics and
-  astronomy, ranging from gravitational-wave data analysis to
-  measurements of black-hole masses in X-ray binaries.
+  astronomy.
+  %ranging from gravitational-wave data analysis to
+  %measurements of black-hole masses in X-ray binaries.
   Reversible-jump Markov chain Monte Carlo (RJMCMC) is an extremely
   powerful technique for performing Bayesian model selection, but it
   suffers from a fundamental difficulty: it requires jumps between
@@ -82,13 +83,124 @@
 
 \section{Introduction}
 
-\will{Mention Weinberg direct integration (Ref.~\cite{Weinberg2009}).
-  Also \cite{Ascasibar2005} in the cosmological context (not really
-  kD-tree, but close).}
+Selection among alternative theoretical models given an observed data
+set is an important challenge in many areas of physics and astronomy.
+In a Bayesian context, model selection involves computing the evidence
+for each model given the data.  The model evidence is an integral of
+the unnormalized posterior probability distribution over the model
+parameter space, representing the ``total probability'' in that model.
+Models with larger evidence are preferred; the ratio of the evidences
+of two models is the Bayes ratio between them.  The product of the
+Bayes ratio and the ratio of prior probabilities for the model gives
+the odds ratio for the models, the ratio of Bayesian probabilities for
+the two models given the observation data.
+
+There are many ways to compute model evidences.  In low-dimensional
+parameter spaces, the unnormalized posterior probability can be
+evaluated on a grid or lattice and the integral can be performed
+directly.  For many problems or models of interest, however, the
+dimensionality of parameter space is too large to make this approach
+practical.  Nested sampling \cite{Skilling:2006,Feroz:2009} \ilya{More
+  references?} is a stochastic method for exploring the parameter
+space of a model while computing the evidence integral statistically
+\ilya{I want a better word than ``statistically'' to indicate that
+  it's doing something akin to Monte-Carlo integration (but I would
+  like to reserve Monte-Carlo for MCMC).}.  
+
+\ilya{Something about how nested sampling distributes points according
+  to the prior, not the posterior, and therefore can miss modes that
+  are disfavored by prior.  Also, it does not exploit any information
+  about the posterior to make the evidence calculation more
+  efficient.}
+
+In contrast to nested sampling, where computation of evidences is the
+primary objective, Markov Chain Monte Carlo (MCMC) methods attempt to
+stochastically produce parameter samples with density proportional to
+the posterior probability distribution.  In MCMC techniques, the
+primary target is an accurate estimate of the posterior distribution.
+It is not straightforward to compute the model evidence from the MCMC
+samples.  The most direct way to estimate the evidence for a model
+from MCMC samples is to compute the harmonic-mean estimatator, but
+this estimator of the evidence suffers from infinite
+variance\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}; various
+methods have been proposed to stabilize it \will{Citation}, but all
+require some assumptions about the shape of the posterior distribution
+that may not be satisfied in practice.
+
+Reference \cite{Weinberg2009} gives a method for directly computing
+the evidence integral using a kD-tree datastructure to decompose a
+parameter space into boxes containing the MCMC sample points.  The
+integral is approximated as a sum over box volumes.  This method is
+promising, but it is not clear in general what statistical and
+systematic errors it introduces and how these are affected by the
+shape of the posterior distribution from which the MCMC samples.
+
+When the goal is model selection between several known models, only
+the \emph{relative} evidence of each model is needed.  In this
+circumstance, the Reversible Jump MCMC technique first introduced in
+Reference \cite{Green1995} is one of the most reliable and accurate
+ways to compare the models.  Reversible Jump MCMC (RJMCMC), described
+more fully in Section \ref{sec:reversible-jump}, performs a standard
+MCMC in a superspace that is a direct sum of all the model parameter
+spaces.  Such an MCMC involves both intra- and inter-model jumps; the
+number of MCMC samples in each model's parameter space is proportional
+to that model's relative evidence in the suite of models being
+compared.
+
+Implemented naively, RJMCMC has a significant drawback: because the
+chain of samples must be Markovian, only the current sample is
+available to the algorithm.  Each time an RJMCMC transitions between
+models, the information about the good parameter values in the
+previous model is lost; subsequent jumps into that model must ``start
+fresh,'' and are correspondingly unlikely to be accepted, delaying
+convergence of the RJMCMC sample chain.  
+
+Here we demonstrate a technique for improving the acceptance ratio of
+inter-model jumps in an RJMCMC, leading to dramatically improved
+convergence of RJMCMC sample chains.  The technique uses a kD-tree
+datastructure to construct an approximation to each model's posterior
+parameter distribution.  We propose jumps into each model drawn from
+the approximation to the posterior.  Because jumps are proposed
+preferentially to locations favored by the single-model posterior, the
+RJMCMC compares ``good'' locations in parameter space across all the
+models, and convergence is generally rapid.  The approximation to the
+posterior distribution produced by the kD-tree is a constant-in-box
+interpolation of the posterior, similar in spirit to the phase-space
+density interpolants produced from N-body positions and momenta in
+Refernce \cite{Ascasibar2005}.  The kD-tree interpolation is effective
+in arbitrary numbers of dimension, and is quite space-efficient,
+requiring $\order{N \log N}$ storage space and $\order{\log N}$ time
+to produce each proposed jump, where $N$ is the number of single-model
+MCMC samples used to construct the interpolation.  Reference
+\cite{Littenberg2009} proposed an alternate method for producing
+inter-model jumps in an RJMCMC that relies on a box decomposition of
+parameter space, but uses fixed-sized boxes; because the box size is
+fixed, the method cannot adapt to the local structure of the
+posterior, and therefore becomes asymptotically less efficient than
+the adaptive kD-tree decomposition in either acceptance ratio or
+storage space as the parameter-space dimension increases or the
+posterior becomes more peaked.  \ilya{Mention something (with
+  reference) about the 10-way RJMCMC in the black-hole mass paper?}
+
+The structure of this paper is as follows: in Section
+\ref{sec:reversible-jump} we introduce in more detail the concept of a
+Reversible Jump MCMC, and describe the fundamental difficulty with a
+naive jump proposal in an RJMCMC.  In Section \ref{sec:kDTree} we
+introduce the kD-tree datastructure used to decompose parameter space
+into boxes for the interpolation.  In Section \ref{sec:efficiency} we
+demonstrate the efficiency gains that are achieved from use of the
+interpolated jump proposal.  In Section \ref{sec:examples} we give
+examples of some other uses of the interpolated jump proposal in a
+single-model MCMC context.  Finally, in Section \ref{sec:conclusion}
+we offer a summary and some concluding remarks on the method.
 
 \section{Reversible Jump MCMC}
+\label{sec:reversible-jump}
 
-Reversible jump Markov chain Monte Carlo (RJMCMC) \cite{Green1995} is a technique for Bayesian model comparison.  Below, we give a very brief introduction to Bayesian analysis; describe a standard MCMC; and introduce RJMCMC.
+Reversible jump Markov chain Monte Carlo (RJMCMC) \cite{Green1995} is
+a technique for Bayesian model comparison.  Below, we give a very
+brief introduction to Bayesian analysis; describe a standard MCMC; and
+introduce RJMCMC.
 
 \subsection{Bayesian analysis}
 
@@ -146,27 +258,69 @@ the Markov Chain Monte Carlo, which we now describe.
 
 \subsection{MCMC} \label{sec:mcmc}
 
-A Markov chain Monte Carlo \cite{Gilks:1996} produces a set of samples $\{ \vtheta^{(j)} \, | \, i = 1, \ldots \}$ from the model parameter space that are sampled according to the posterior, meaning that, in the limit that the chain length tends to infinity, the relative frequency with which a given set of parameter appears in the chain is proportional to the desired posterior, $p(\vtheta|d,M)$.  Therefore, the output of an MCMC can be directly interpreted as the posterior PDF over the full parameter space, while PDFs for individual parameters can be obtained through trivially marginalizing over the uninteresting parameters, simply by considering the distribution of the parameter of interest in the MCMC samples.
+A Markov chain Monte Carlo \cite{Gilks:1996} produces a set of samples
+$\{ \vtheta^{(j)} \, | \, i = 1, \ldots \}$ from the model parameter
+space that are sampled according to the posterior, meaning that, in
+the limit that the chain length tends to infinity, the relative
+frequency with which a given set of parameter appears in the chain is
+proportional to the desired posterior, $p(\vtheta|d,M)$.  Therefore,
+the output of an MCMC can be directly interpreted as the posterior PDF
+over the full parameter space, while PDFs for individual parameters
+can be obtained by marginalizing over the uninteresting parameters.
 
-A Markov chain has the property that the probability distribution of the next state can depend only on the current state, not on the past history:
-\be
-p(\vtheta^{(j+1)})=\int_{V} d\vtheta^{(j)} p(\vtheta^{(j)} \to \vtheta^{(j+1)}) p(\vtheta^{(j)}),
-\ee
-where the jump probability $p(\vtheta^{(j)} \to \vtheta^{(j+1)})$ depends only on $\vtheta^{(j)}$ and $\vtheta^{(j+1)}$. 
-An additional requirement for an MCMC arises from the fact that the desired distribution is the equilibrium distribution.  In other words, if we assume that state $(j)$ of the chain is sampled from the desired PDF, $p(\vtheta^{(j)})=p(\vtheta|d,M)$ , then the next state $(j+1)$ must be sampled from the PDF as well, so that $p(\vtheta^{(j+1)})=p(\vtheta|d,M)$.  
+A Markov chain has the property that the probability distribution of
+the next state can depend only on the current state, not on the past
+history: 
+%
+\be 
+p(\vtheta^{(j+1)})=\int_{V} d\vtheta^{(j)} p(\vtheta^{(j)} \to
+\vtheta^{(j+1)}) p(\vtheta^{(j)}), \ee
+%
+where the jump probability $p(\vtheta^{(j)} \to \vtheta^{(j+1)})$
+depends only on $\vtheta^{(j)}$ and $\vtheta^{(j+1)}$.  An additional
+requirement for an MCMC arises from the fact that the desired
+distribution is the equilibrium distribution.  In other words, if we
+assume that state $(j)$ of the chain is sampled from the desired PDF,
+$p(\vtheta^{(j)})=p(\vtheta|d,M)$ , then the next state $(j+1)$ must
+be sampled from the PDF as well, so that
+$p(\vtheta^{(j+1)})=p(\vtheta|d,M)$; this condition is known as
+``detailed balance.''
 
-One way to produce such a sequence of samples is via the Metropolis-Hastings algorithm, first proposed by Metropolis et al.~in 1953 \cite{Metropolis:1953}, and later generalized by Hastings:
+One way to produce such a sequence of samples is via the
+Metropolis-Hastings algorithm, first proposed in Reference
+\cite{Metropolis:1953}, and later generalized by Hastings
+\ilya{Citation?}:
 \begin{enumerate}
-  \item Given a current state $\vtheta^{(j)}$, propose the next state $\vtheta^p$ by drawing from a jump proposal distribution with probability $Q(\vtheta^{(j)} \to \vtheta^p)$.  
-  \item Compute the probability of accepting the proposed jump as
-\bel{eq:p-accept}
-p_{\textnormal{accept}}  \equiv \min\Bigl(1,  \frac{p(\vtheta^p|d)}{p(\vtheta^{(j)}|d)} \frac{Q(\vtheta^p \to
-        \vtheta^{(j)})}{Q(\vtheta^{(j)} \to \vtheta^p)} \Bigr).
+\item Given a current state $\vtheta^{(j)}$, propose the next state
+  $\vtheta^p$ by drawing from a jump proposal distribution with
+  probability $Q(\vtheta^{(j)} \to \vtheta^p)$.
+\item Compute the probability of accepting the proposed jump as
+  \bel{eq:p-accept} 
+p_{\textnormal{accept}} \equiv \min\Bigl(1,
+\frac{p(\vtheta^p|d)}{p(\vtheta^{(j)}|d)} \frac{Q(\vtheta^p \to
+  \vtheta^{(j)})}{Q(\vtheta^{(j)} \to \vtheta^p)} \Bigr).  
 \ee
-\item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<  p_{\textnormal{accept}}$, accept the proposed jump, setting $\vtheta^{(j+1)}=\vtheta^p$.  Otherwise, reject the jump, and remain at the same location in parameter space for the next step, $\vtheta^{(j+1)}=\vtheta^{(j)}$.
- \end{enumerate}
+\item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<
+  p_{\textnormal{accept}}$, accept the proposed jump, setting
+  $\vtheta^{(j+1)}=\vtheta^p$.  Otherwise, reject the jump, and remain
+  at the same location in parameter space for the next step,
+  $\vtheta^{(j+1)}=\vtheta^{(j)}$.
+\end{enumerate}
  
-This jump proposal distribution $Q(\vtheta^{(j)} \to \vtheta^p)$ can depend on the parameters of the current state $\vtheta^{(j)}$, but not on the past history.  It must also allow any state within the allowed prior volume to be reachable by the MCMC.  Beyond these conditions, there is obviously a great deal of freedom in choosing the jump proposal distribution.  This is the most important choice in the MCMC, as it determines the sampling efficiency of the algorithm, i.e., the necessary length of the chain before it converges to the posterior PDF.  Creating an efficient jump proposal distribution requires an understanding of the structure of the parameter space which may not be available until the PDFs are found, creating a Catch-22; one possibility for resolving this infinite loop is described in Section \ref{sec:examples}.
+This jump proposal distribution $Q(\vtheta^{(j)} \to \vtheta^p)$ can
+depend on the parameters of the current state $\vtheta^{(j)}$, but not
+on the past history.  It must also allow any state within the allowed
+prior volume to be reachable by the MCMC.  Any jump proposal that
+satisfies these properties is suitable for an MCMC.
+
+The jump proposal is the most important choice in the MCMC, as it
+determines the sampling efficiency of the algorithm, i.e., the
+necessary length of the chain before it converges to the posterior
+PDF.  Creating an efficient jump proposal distribution requires an
+understanding of the structure of the parameter space which may not be
+available until the PDFs are found, creating a Catch-22; one
+possibility for resolving this infinite loop is described in Section
+\ref{sec:examples}.
 
 It should be noted that although an MCMC whose jump acceptance
 criterium obeys detailed balance (as the Metropolis-Hastings algorithm
@@ -186,26 +340,26 @@ issue).
 Finally, we note that, in practice, the randomly chosen initial
 starting point of the MCMC may be in a particularly unlikely location
 in the parameter space.  Because jumps are frequently local, we will
-generally want to ignore the first few autocorrelation lengths worth
-of points in a finite-size chain to avoid biases in the recovered
-posterior PDF due to the choice of the initial location.  The points
-thus discarded are referred to as "burn-in" points.
+generally want to ignore the early points in a finite-size chain to
+avoid biases in the recovered posterior PDF due to the choice of the
+initial location.  The points thus discarded are referred to as
+"burn-in" points.
 
 \subsection{RJMCMC}
 
-The samples produced during by an MCMC algorithm can be used to
-directly perform a Monte Carlo evidence integral.  This results in a
-harmonic mean estimator for the evidence, which suffers from a large
-variance and a possible bias
-\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  Additional
-techniques for the direct integration of evidence, also based on a kD
-tree decomposition of the parameter space (see Sec.~\ref{sec:kDTree}),
-are described in \cite{Weinberg2009}.  These techniques are promising,
-but in some cases suffer \cite{Farr2010} from large variance and bias
-as well.  An alternative approach to model selection among a set of
-models is based on performing an MCMC in a ``super-model'' that
-encompasses all of the models under consideration; this is known the
-the Reversible Jump Markov chain Monte Carlo (RJMCMC).
+The samples produced by an MCMC algorithm can be used to directly
+perform a Monte Carlo evidence integral.  This results in a harmonic
+mean estimator for the evidence, which suffers from a large variance
+and bias \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.
+Additional techniques for the direct integration of evidence, also
+based on a kD tree decomposition of the parameter space (see
+Sec.~\ref{sec:kDTree}), are described in \cite{Weinberg2009}.  These
+techniques are promising, but in some cases suffer \cite{Farr2010}
+from large variance and bias as well.  An alternative approach to
+model selection among a set of models is based on performing an MCMC
+in a ``super-model'' that encompasses all of the models under
+consideration; this is known the the Reversible Jump Markov chain
+Monte Carlo (RJMCMC).
 
 The parameter space of the super-model in an RJMCMC consists of a
 discrete parameter that identifies the model, $M_i$, and a set of
@@ -218,8 +372,9 @@ model (intramodel jumps) and jumps to a different model with different
 parameters (intermodel jumps).  The resulting chain samples from the
 posterior $p(M_i,\vtheta_i|d)$.  As in a usual MCMC, the PDF on the
 model as a parameter, with other parameters ignored, is obtained by
-marginalizing over the remaining parameters, i.e., the evidence for a
-given model is just
+marginalizing over the remaining parameters.  If we assume uniform
+priors on the models, the evidence for a given model is proportional
+to the number of counts 
 %
 \be
 p(M_i|d) = \int d\vtheta_i p(M_i, \vtheta_i|d) \approx \frac{N_i}{N},
@@ -370,6 +525,7 @@ tree, $T$:
 \end{enumerate}
 
 \section{RJMCMC Efficiency}
+\label{sec:efficiency}
 
 \begin{figure}
   \begin{center}
@@ -379,7 +535,8 @@ tree, $T$:
     function of boxing number for the RJMCMC described in the text.}
 \end{figure}
 
-\section{Examples and other uses} \label{sec:examples}
+\section{Examples and other uses} 
+\label{sec:examples}
 
 RJMCMC with efficient PDF interpolation via kD trees can be used in a large variety of problems in physics and astronomy, whenever Bayesian analysis is used to perform model selection.  Below, we describe several scenarios in which we have successfully applied this technique.  Moreover, PDF interpolation with a kD tree can be extremely useful in other contexts, beyond a reversible-jump MCMC.  We suggest two examples below: generating efficient jump proposal distributions in a single-model MCMC and convergence tests.
 
@@ -444,12 +601,7 @@ points to determine whether the original run spent correct fractional
 amounts of time in the various modes.
 
 \section{Conclusion/Discussion}
-
-
-
-
-
-\nocite{Littenberg2009}
+\label{sec:conclusion}
 
 \bibliography{paper}
 
