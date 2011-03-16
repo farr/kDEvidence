@@ -523,22 +523,22 @@ tree, $T$:
 \label{sec:efficiency}
 
 In this section, we demonstrate the efficiency of the kD-interpolated
-jump proposal on a toy model comparison problem.  We draw $N = 100$
+jump proposal on a toy model-comparison problem.  We draw $N = 100$
 simulated data points from a $N(0,1)$ Gaussian distribution, and then
 ask whether these data are better described by a model where they are
-Gaussian distributed with unkonwn mean, $\mu$, and standard deviation,
+Gaussian distributed with unknown mean $\mu$ and standard deviation
 $\sigma$
 %
 \be
 p(x) = \frac{1}{\sqrt{2\pi} \sigma} \exp\left( - \frac{(x-\mu)^2}{2
-    \sigma^2} \right),
+    \sigma^2} \right)\ ,
 \ee
 %
-or by a model where they are Cauchy distributed with mode $\alpha$,
+or by a model where they are Cauchy distributed with mode $\alpha$
 and width $\beta$
 %
 \be
-p(x) = \frac{1}{\pi \beta \left( 1 + \left(\frac{x - \alpha}{\beta}\right)^2\right)}.
+p(x) = \frac{1}{\pi \beta \left( 1 + \left(\frac{x - \alpha}{\beta}\right)^2\right)}\ .
 \ee
 %
 We take priors on $\mu$ and $\alpha$ to be uniform in $[-1,1]$, and
@@ -547,13 +547,13 @@ data set of 100 points, the relative uncertainty in determining the
 parameters of the underlying distribution is approximately 10\%, so we
 expect the posterior probabilities in the $(\mu,\sigma)$ and
 $(\alpha,\beta)$ spaces to occupy only a few percent of the prior
-volume.  The Cauchy distribution is so much broader than the Gaussian
-(it has no finite moments), that with uniform model proirs, the
+volume.  The Cauchy distribution is much broader than the Gaussian
+(it has no finite moments), so with uniform model priors, the
 posterior probability for the Gaussian model over the Cauchy model is
 extremely large:
 %
 \be
-\frac{p(\textnormal{Gaussian} | d)}{p(\textnormal{Cauchy}|d)} > 10^9
+\frac{p(\textnormal{Gaussian} | d)}{p(\textnormal{Cauchy}|d)} > 10^9\ .
 \ee
 %
 
