@@ -1,4 +1,8 @@
-\documentclass[aps,prd,reprint]{revtex4-1}
+\IfFileExists{revtex4-1.cls}{\documentclass[prd, twocolumn, lengthcheck,
+superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4-1}}{ 
+\IfFileExists{revtex4.cls}{\documentclass[prd, twocolumn, lengthcheck,
+superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
+}
 
 \usepackage{amsmath}
 \usepackage{hyperref}
@@ -32,7 +36,8 @@
 \def\nat{Nature}              % Nature
 \def\aap{A\&A}                % Astronomy and Astrophysics
 
-\bibliographystyle{apsrev4-1}
+\IfFileExists{apsrev4-1.bst}{\bibliographystyle{apsrev4-1}}
+\IfFileExists{apsrev4.bst}{\bibliographystyle{apsrev4}}
 
 \begin{document}
 \title{An Efficient Interpolation Technique for Jump Proposals in
