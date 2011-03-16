@@ -546,7 +546,17 @@ priors in $\sigma$ and $\beta$ to be uniform in $[0.5, 1.5]$.  With a
 data set of 100 points, the relative uncertainty in determining the
 parameters of the underlying distribution is approximately 10\%, so we
 expect the posterior probabilities in the $(\mu,\sigma)$ and
-$(\alpha,\beta)$ spaces to occupy roughly 1\% of the prior volume.  
+$(\alpha,\beta)$ spaces to occupy only a few percent of the prior
+volume.  The Cauchy distribution is so much broader than the Gaussian
+(it has no finite moments), that with uniform model proirs, the
+posterior probability for the Gaussian model over the Cauchy model is
+extremely large:
+%
+\be
+\frac{p(\textnormal{Gaussian} | d)}{p(\textnormal{Cauchy}|d)} > 10^9
+\ee
+%
+
 
 \begin{figure}
   \begin{center}
