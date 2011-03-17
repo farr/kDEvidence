@@ -686,8 +686,14 @@ a fractional error that scales as
 $1/\sqrt{N_{\textnormal{transitions}}}$, where
 $N_{\textnormal{transitions}}$ is the number of transitions between
 the peaks.  By increasing the number of proposed transitions, the
-convergence of such PDFs can be enhanced using the kD tree
-interpolated proposal.  
+convergence of such PDFs can be enhanced using the kD-tree
+interpolated proposal.  As described above, one could test the convergence of the PDF 
+by running a followup MCMC with a jump proposal
+distribution from an interpolation of the first original PDF.  This
+follow-up MCMC would attempt large global jump proposals rather than
+small local ones, meaning that it could rapidly accumulate sufficient
+points to determine whether the original run spent the correct fractional
+amounts of time in the various modes.
 
 \section{Conclusion}
 \label{sec:conclusion}
