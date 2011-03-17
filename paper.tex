@@ -439,11 +439,11 @@ bricks, missing the local structure of the PDF in exchange for fewer
 empty bricks. \will{Are you happy with this bit of editing?}
 
 An alternate technique for producing adaptive neighborhoods would be
-to use the Voronoi regions associated with each MCMC sample.  The
-Voronoi region associated with a sample contains all the parameter
-space points that are closer to that sample than any other sample.
-The Voronoi region decomposition into neighborhoods is, in a sense,
-maximally adaptive, in contrast to the approach of
+to use the Voronoi regions \cite{Voronoi1907} associated with each
+MCMC sample.  The Voronoi region associated with a sample contains all
+the parameter space points that are closer to that sample than any
+other sample.  The Voronoi region decomposition into neighborhoods is,
+in a sense, maximally adaptive, in contrast to the approach of
 Ref.~\cite{Littenberg2009}, which is minimally adaptive.
 Unfortunately, defining the Voronoi regions requires a metric on
 parameter space, which may be difficult or impossible to define.
@@ -542,24 +542,63 @@ data set of 100 points, the relative uncertainty in determining the
 parameters of the underlying distribution is approximately 10\%, so we
 expect the posterior probabilities in the $(\mu,\sigma)$ and
 $(\alpha,\beta)$ spaces to occupy only a few percent of the prior
-volume.  The Cauchy distribution is much broader than the Gaussian
-(it has no finite moments), so with uniform model priors, the
-posterior probability for the Gaussian model over the Cauchy model is
-extremely large:
+volume.  The Cauchy distribution is much broader than the Gaussian (it
+has no finite moments), so with uniform model priors, the posterior
+probability for the Gaussian model over the Cauchy model is extremely
+large:
 %
 \be
-\frac{p(\textnormal{Gaussian} | d)}{p(\textnormal{Cauchy}|d)} > 10^9\ .
+\frac{p(\textnormal{Gaussian} | d)}{p(\textnormal{Cauchy}|d)} \sim 10^9.
 \ee
 %
+In order to ensure that the RJMCMC produces samples in the Cauchy
+model at all, we impose a model prior that favors the Cauchy model by
+$5 \times 10^8$ relative to the Gaussian.  The evidence ratio between
+the models for our chosen data set with these priors is
+%
+\be \frac{p(\textnormal{Gaussian} | d)}{p(\textnormal{Cauchy}|d)}
+\equiv r = 1.15,
+\ee
+%
+yielding a theoretical maximum acceptance rate of inter-model jumps of
+$(1+1/r)/2 = 0.93$.
 
+We obtain $10^4$ individual model MCMC samples within each model, and
+use the kD-tree interpolation method described above to propose
+inter-model jumps in an RJMCMC.  The acceptance rate of inter-model
+jumps is approximately 0.8.  To explore how the efficiency of the
+method degrades as the interpolation becomes less accurate, we
+artificially truncated the kD tree with higher and higher numbers of
+points in each box (this can be accomplished during the neighborhood
+search phase by stopping the search for a box when one is found
+containing the desired number of points).  For each truncation, we
+performed an RJMCMC with the resulting interpolated jump proposal.
+The acceptance rate versus truncation number appear in Figure
+\ref{fig:acceptRate}.  The more points in each box of the tree when
+the search is truncated, the lower the acceptance probability; when
+points are drawn from the top level of the tree, the acceptance
+probability asymptotes to the naive draw from the prior ($\sim 5\%$).
 
 \begin{figure}
   \begin{center}
     \includegraphics[width=0.8\columnwidth]{acceptRate}
   \end{center}
-  \caption{\label{fig:acceptRate} The inter-model acceptance rate as a
-    function of boxing number for the RJMCMC described in the text.}
+  \caption{\label{fig:acceptRate} The inter-model acceptance rate
+    versus the number of points per box when the kD-tree neighborhood
+    search is truncated.  As the number of points per box increases,
+    and the interpolation becomes less accurate, the acceptance rate
+    falls, asymptoting to the rate for naive draws from the uniform
+    prior (about $5\%$).}
 \end{figure}
+
+The relative error on the determination of the evidence ratio scales
+with $1/\sqrt{N_{\textnormal{transitions}}}$, where
+$N_{\textnormal{transitions}}$ is the number of inter-model
+transitions in the RJMCMC.  Thus, as the acceptance rate of
+inter-model jumps goes down, the RJMCMC must run longer to achieve a
+desired accuracy in the evidence ratio.  By boosting the acceptance
+rate of inter-model jumps significantly, the interpolation method
+described above can dramatically improve the runtime of an RJMCMC.
 
 \section{Examples and other uses} 
 \label{sec:examples}
