@@ -563,18 +563,16 @@ the models for our chosen data set with these priors is
 yielding a theoretical maximum acceptance rate of inter-model jumps of
 $(1+1/r)/2 = 0.93$.
 
-We obtain $10^4$ individual model MCMC samples within each model, and
-use the kD-tree interpolation method described above to propose
+We obtain $10^4$ single-model MCMC samples by independently running MCMC within each model, and use the kD-tree interpolation method described above to propose
 inter-model jumps in an RJMCMC.  The acceptance rate of inter-model
 jumps is approximately 0.8.  To explore how the efficiency of the
 method degrades as the interpolation becomes less accurate, we
 artificially truncated the kD tree with higher and higher numbers of
 points in each box (this can be accomplished during the neighborhood
 search phase by stopping the search for a box when one is found
-containing the desired number of points).  For each truncation, we
+containing the desired number of points).  For each truncation choice, we
 performed an RJMCMC with the resulting interpolated jump proposal.
-The acceptance rate versus truncation number appear in Figure
-\ref{fig:acceptRate}.  The more points in each box of the tree when
+The acceptance rate is plotted against the number of single-model MCMC points per box (kD-tree leaf) in Figure \ref{fig:acceptRate}.  The more points in each leaf of the tree when
 the search is truncated, the lower the acceptance probability; when
 points are drawn from the top level of the tree, the acceptance
 probability asymptotes to the naive draw from the prior ($\sim 5\%$).
@@ -588,15 +586,15 @@ probability asymptotes to the naive draw from the prior ($\sim 5\%$).
     search is truncated.  As the number of points per box increases,
     and the interpolation becomes less accurate, the acceptance rate
     falls, asymptoting to the rate for naive draws from the uniform
-    prior (about $5\%$).}
+    prior (about $5\%$ for this data set).}
 \end{figure}
 
-The relative error on the determination of the evidence ratio scales
+The relative error on the determination of the Bayes factor (evidence ratio) scales
 with $1/\sqrt{N_{\textnormal{transitions}}}$, where
 $N_{\textnormal{transitions}}$ is the number of inter-model
 transitions in the RJMCMC.  Thus, as the acceptance rate of
 inter-model jumps goes down, the RJMCMC must run longer to achieve a
-desired accuracy in the evidence ratio.  By boosting the acceptance
+desired accuracy in the Bayes factor.  By boosting the acceptance
 rate of inter-model jumps significantly, the interpolation method
 described above can dramatically improve the runtime of an RJMCMC.
 
