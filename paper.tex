@@ -99,7 +99,6 @@ Models with larger evidence are preferred; the ratio of the evidences
 of two models is the Bayes factor between them.  The product of the
 Bayes factor and the ratio of prior probabilities for the two models yields
 the odds ratio for the models.
-%, the ratio of Bayesian probabilities for the two models given the observation data.
 
 There are many ways to compute model evidences.  In low-dimensional
 parameter spaces, the unnormalized posterior probability can be
@@ -108,29 +107,31 @@ directly.  For many problems or models of interest, however, the
 dimensionality of parameter space is too large to make this approach
 practical, and stochastic sampling must be used.  
 
-%\ilya{Something about how nested sampling distributes points according to the prior, not the posterior, and therefore can miss modes that are disfavored by prior.  Also, it does not exploit any information about the posterior to make the evidence calculation more efficient.}
-
-Markov Chain Monte Carlo (MCMC) methods attempt to
-stochastically produce parameter samples with density proportional to
-the posterior probability distribution.   In MCMC techniques, the primary target is an accurate estimate of the posterior distribution.  (We note that an alternative stochastic method for exploring a model parameter space, nested sampling \cite{Skilling:2004, Skilling:2006,Feroz:2009}, focuses on evidence computation rather than sampling the posterior probability density functions.)  \will{Will, are you happy with nested sampling in a parenthetical expression, without further comments?}
-It is not straightforward to compute the model evidence from the MCMC
-samples.  The most direct way to estimate the evidence for a model
-from MCMC samples is to compute the harmonic-mean estimator, but
-this estimator of the evidence suffers from infinite
-variance\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  Various
-methods have been proposed to stabilize the harmonic-mean estimator \will{Citation}, but all
-require some assumptions about the shape of the posterior distribution
-that may not be satisfied in practice.  MCMC implementations with parallel tempering \cite{EarlDeem:2005} allow for evidence computation via thermodynamic integration, but these can be computationally costly.  
-
-
+Markov Chain Monte Carlo (MCMC) methods attempt to stochastically
+produce parameter samples with density proportional to the posterior
+probability distribution.  In MCMC techniques, the primary target is
+an accurate estimate of the posterior distribution.  (We note that an
+alternative stochastic method for exploring a model parameter space,
+nested sampling \cite{Skilling:2004, Skilling:2006,Feroz:2009},
+focuses on evidence computation rather than sampling the posterior
+probability density functions.)  It is not straightforward to compute
+the model evidence from MCMC samples.  The most direct way to estimate
+the evidence for a model from MCMC samples is to compute the
+harmonic-mean estimator, but this estimator of the evidence suffers
+from infinite
+variance\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  MCMC
+implementations with parallel tempering \cite{EarlDeem:2005} allow for
+evidence computation via thermodynamic integration, but these can be
+computationally costly.
 
 Reference \cite{Weinberg2009} gives a method for directly computing
-the evidence integral from existing MCMC samples by using a kD-tree data structure to decompose a
-parameter space into boxes containing the MCMC sample points.  The
-integral is approximated as a sum over box volumes.  This method is
-promising, but it is not clear in general what statistical and
-systematic errors it introduces and how these are affected by the
-shape of the posterior distribution from which the MCMC samples.
+the evidence integral from existing MCMC samples by using a kD-tree
+data structure to decompose a parameter space into boxes containing
+the MCMC sample points.  The integral is approximated as a sum over
+box volumes.  This method is promising, but it is not clear in general
+what statistical and systematic errors it introduces and how these are
+affected by the shape of the posterior distribution from which the
+MCMC samples.
 
 When the goal is model selection between several known models, only
 the \emph{relative} evidence of each model is needed.  In this
@@ -146,11 +147,12 @@ compared.
 
 Implemented naively, RJMCMC has a significant drawback: because the
 chain of samples must be Markovian, only the current sample is
-available to the algorithm.  Each time an RJMCMC transitions between
-models, the information about the choices of parameter values in the
-previous model is lost; subsequent jumps into that model must ``start
-fresh,'' and are correspondingly unlikely to be accepted, delaying
-convergence of the RJMCMC sample chain.  
+available to the algorithm as it is choosing the next sample.  Each
+time an RJMCMC transitions between models, the information about the
+choices of parameter values in the previous model is lost; subsequent
+jumps into that model must ``start fresh,'' and are correspondingly
+unlikely to be accepted, delaying convergence of the RJMCMC sample
+chain.
 
 Here we introduce a technique for improving the acceptance ratio of
 inter-model jumps in an RJMCMC, leading to dramatically improved
@@ -161,19 +163,21 @@ preferentially to locations favored by the single-model posterior, the
 RJMCMC compares ``good'' locations in parameter space across all the
 models, and convergence is generally rapid.  We have successfully applied this RJMCMC technique to a 10-way model selection among alternative mass distribution models for black-hole X-ray binaries \cite{Farr2010}.
 
-Reference \cite{Littenberg2009} proposed an alternate method for producing
-inter-model jumps in an RJMCMC that relies on a box decomposition of
-parameter space, but uses fixed-sized boxes.  The box size is
-fixed, so the method cannot adapt to the local structure of the
-posterior, and becomes asymptotically inefficient for high-dimensional parameter spaces or highly peaked posteriors.  Meanwhile, the approximation to the
-posterior distribution produced by the kD-tree is a constant-in-box
-interpolation of the posterior, similar in spirit to the phase-space
-density interpolants produced from N-body positions and momenta in
-Reference \cite{Ascasibar2005}.  The kD-tree interpolation is effective
-in parameter spaces of arbitrary dimensionality, and is quite space-efficient,
-requiring $\order{N \log N}$ storage space and $\order{\log N}$ time
-to produce each proposed jump, where $N$ is the number of single-model
-MCMC samples used to construct the interpolation.  
+Reference \cite{Littenberg2009} proposed an alternate method for
+producing inter-model jumps in an RJMCMC that relies on a box
+decomposition of parameter space, but uses fixed-sized boxes.  The box
+size is fixed, so the method cannot adapt to the local structure of
+the posterior, and becomes asymptotically inefficient for
+high-dimensional parameter spaces or highly peaked posteriors.
+Meanwhile, the approximation to the posterior distribution produced by
+the kD-tree is a constant-in-box interpolation of the posterior,
+similar in spirit to the phase-space density interpolants produced
+from N-body positions and momenta in Reference \cite{Ascasibar2005}.
+The kD-tree interpolation is effective in parameter spaces of
+arbitrary dimensionality, and is quite space-efficient, requiring
+$\order{N}$ storage space and $\order{\log N}$ time to produce each
+proposed jump, where $N$ is the number of single-model MCMC samples
+used to construct the interpolation.
 
 
 The structure of this paper is as follows.  In Section
@@ -193,7 +197,7 @@ we offer a summary and some concluding remarks on the method.
 
 Reversible jump Markov chain Monte Carlo (RJMCMC) \cite{Green1995} is
 a technique for Bayesian model comparison.  Below, we give a very
-brief introduction to Bayesian analysis; describe a standard MCMC; and
+brief introduction to Bayesian analysis, describe a standard MCMC, and
 introduce RJMCMC.
 
 \subsection{Bayesian analysis}
@@ -244,10 +248,12 @@ $\vtheta$ exceeds a few.  The parameter space must typically be
 explored in a stochastic manner before the evidence integral can be
 computed.  There are several stochastic parameter-exploration
 techniques focused directly on evidence computation (e.g., nested
-sampling \cite{Skilling:2004,Skilling:2006} and its variant MultiNest \cite{Feroz:2009}).  Although nested sampling can be used to compute the posterior PDFs within each model along
-with the evidences for the various models, perhaps the most common
-technique for computing posterior PDFs in the context of a model is
-the Markov chain Monte Carlo, which we now describe.
+sampling \cite{Skilling:2004,Skilling:2006} and its variant MultiNest
+\cite{Feroz:2009}).  Although nested sampling can be used to compute
+the posterior PDFs within each model along with the evidences for the
+various models, the most common technique for computing posterior PDFs
+in the context of a model is the Markov chain Monte Carlo, which we
+now describe.
 
 \subsection{Markov chain Monte Carlo} \label{sec:mcmc}
 
@@ -345,10 +351,10 @@ and bias \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.
 Additional techniques for the direct integration of evidence, also
 based on a kD tree decomposition of the parameter space (see
 Sec.~\ref{sec:kDTree}), are described in \cite{Weinberg2009}.  These
-techniques are promising, but in some cases suffer \cite{Farr2010} \will{Is this really the reference you meant?}
-from large variance and bias as well.  An alternative approach to
-model selection among a set of models is based on performing an MCMC
-in a ``super-model'' that encompasses all of the models under
+techniques are promising, but in some cases suffer \cite{Farr2010}
+from large variance and bias.  An alternative approach to model
+selection among a set of models is based on performing an MCMC in a
+``super-model'' that encompasses all of the models under
 consideration; this is known the the Reversible Jump Markov chain
 Monte Carlo (RJMCMC).
 
@@ -430,13 +436,12 @@ the peaks of the PDF.  Each sample was associated with the brick that
 contained it, and the probability of proposing a jump into a particular brick is thus proportional to the
 number of samples within that brick.  Additionally, an extra uniform jump proposal was added to allow for jumps into bricks that did not contain any points, so that the jump 
 proposal covers the entire model parameter space.  
-%The solution to this problem was to add a uniform distribution to the proposal PDF, in the form of one ``fictitious'' point per brick.  The extra uniform distribution from the fictitious points can represent a significant cost, since inter-model jumps proposed from the uniform distribution are unlikely to be accepted.  
-However, the bricks in this
-algorithm do not adapt to the local structure of the PDF.  One must
-either use small bricks to capture the local structure of the PDF,
-placing many bricks in regions without MCMC samples (which can increase memory management and access costs, even for sparse matrices), or use large
-bricks, missing the local structure of the PDF in exchange for fewer
-empty bricks. \will{Are you happy with this bit of editing?}
+However, the bricks in this algorithm do not adapt to the local
+structure of the PDF.  One must either use small bricks to capture the
+local structure of the PDF, placing many bricks in regions without
+MCMC samples (which can increase memory management and access costs),
+or use large bricks, missing the local structure of the PDF in
+exchange for fewer empty bricks.
 
 An alternate technique for producing adaptive neighborhoods would be
 to use the Voronoi regions \cite{Voronoi1907} associated with each
@@ -594,9 +599,9 @@ with $1/\sqrt{N_{\textnormal{transitions}}}$, where
 $N_{\textnormal{transitions}}$ is the number of inter-model
 transitions in the RJMCMC.  Thus, as the acceptance rate of
 inter-model jumps goes down, the RJMCMC must run longer to achieve a
-desired accuracy in the Bayes factor.  By boosting the acceptance
-rate of inter-model jumps significantly, the interpolation method
-described above can dramatically improve the runtime of an RJMCMC.
+desired accuracy in the evidence ratio.  By boosting the acceptance
+rate of inter-model jumps, the interpolation method described above
+can dramatically improve the runtime of an RJMCMC.
 
 \section{Examples and other uses} 
 \label{sec:examples}
@@ -637,31 +642,52 @@ to 15 for the model with two spinning components \cite{Raymond:2010}), and RJMCM
 interpolation via kD trees is again successful at computing the model
 evidences. 
 
-As discussed in Section \ref{sec:mcmc}, finding an efficient jump proposal distribution can be a challenge even for a single-model MCMC.  This is particularly difficult when the parameter space is multi-modal, in which case the Markov chain can get stuck on individual high-likelihood islands in the parameter space.  Traversals of low-likelihood oceans by a series of short jumps are extremely unlikely, and random long jumps are almost always rejected, making sampling very inefficient.  Ideally, an analytical understanding of the model that would give a glimpse of the structure of the archipelago of islands would allow for the creation of jump proposal distributions that combine short jumps designed to explore individual islands with directed long jumps that are likely to end up on neighboring islands.  However, it is not always possible to gain such understanding short of performing the MCMC itself.  One solution lies in running multiple chains that explore the parameter space, perhaps getting stuck on local maxima, and then combining the points and interpolating with a kD tree to create a jump proposal distribution.  Although the chains in the first iteration will not have converged, and the relative sizes of the modes will not be accurately known, this will ensure that all of the modes (islands) are at least included in the jump proposal distribution for a second stage, greatly improving its efficiency.  Other modifications to this technique, which we are currently investigating, include multiple iterative stages, with the interpolated samples from each previous stage used as a jump proposal distribution for the next stage, until the posterior PDF is read off from the final stage; and the use of higher temperatures in the early-stage chains to improve sampling.
+As discussed in Section \ref{sec:mcmc}, finding an efficient jump
+proposal distribution can be a challenge even for a single-model MCMC.
+This is particularly difficult when the parameter space is
+multi-modal, in which case the Markov chain can get stuck on
+individual high-posterior islands in the parameter space.  Traversals
+of low-posterior oceans by a series of short jumps are extremely
+unlikely, and random long jumps are almost always rejected, making
+sampling very inefficient.  Essentially, such isolated islands in
+parameter space behave as separate models, and weighting them by the
+number of samples in each peak then corresponds to model selection.
+Ideally, an analytical understanding of the model would allow for the
+creation of jump proposal distributions that combine short jumps
+designed to explore individual islands with directed long jumps that
+are likely to end up on neighboring islands.  However, it is not
+always possible to gain such understanding short of performing the
+MCMC itself.  One solution lies in running multiple chains that
+explore the parameter space, perhaps getting stuck on local maxima,
+and then combining the points and interpolating with a kD tree to
+create a jump proposal distribution.  Although the chains in the first
+iteration will not have transitioned between the peaks, and the
+samples will therefore not weight the separate peaks appropriately,
+this will ensure that all of the modes (islands) are included in the
+jump proposal distribution for a second stage.  This second stage can
+employ an interpolated jump proposal exactly as in the model selection
+discussed above.  Other modifications to this technique, which we are
+currently investigating, include multiple iterative stages, with the
+interpolated samples from each previous stage used as a jump proposal
+distribution for the next stage, until the posterior PDF is read off
+from the final stage; and the use of higher temperatures in the
+early-stage chains to improve sampling.
 
-The possibility of MCMC chains becoming even temporarily stuck on
-local maxima also affects convergence.  In the absence of a sufficient
-number of jump proposals between the local maxima, the MCMC may not
-accurately represent their relative sizes.  For example, this can
-happen with antipodal sky location degeneracies for networks of three
-ground-based gravitational-wave interferometers or for low-frequency
-gravitational wave signals in the proposed space-borne instrument LISA
-\cite{LISA}.  Although PDFs produced by MCMC chains will generally
-show both locations on the sky, the chain length may not be
-sufficiently long in practice to include enough jumps between the two
-high-likelihood antipodal locations.  In general, the relative weight
-of two separated peaks is determined with a fractional error that
-scales as $1/\sqrt{N_{\textnormal{transitions}}}$, where
+An example of a multi-modal parameter space where chains can get stuck
+on high-posterior islands comes from antipodal sky location
+degeneracies for networks of three ground-based gravitational-wave
+interferometers or for low-frequency gravitational wave signals in the
+proposed space-borne instrument LISA \cite{LISA}.  Although PDFs
+produced by MCMC chains will generally show both locations on the sky,
+the chain length may not be sufficiently long in practice to include
+enough jumps between the two high-likelihood antipodal locations.  In
+general, the relative weight of two separated peaks is determined with
+a fractional error that scales as
+$1/\sqrt{N_{\textnormal{transitions}}}$, where
 $N_{\textnormal{transitions}}$ is the number of transitions between
 the peaks.  By increasing the number of proposed transitions, the
 convergence of such PDFs can be enhanced using the kD tree
-interpolated proposal.  We can test the convergence of an MCMC with
-local jumps by running a followup MCMC with a jump proposal
-distribution from an interpolation of the first MCMC's PDF.  This
-follow-up MCMC would make large global jump proposals rather than
-small local ones, meaning that it could rapidly accumulate sufficient
-points to determine whether the original run spent correct fractional
-amounts of time in the various modes.
+interpolated proposal.  
 
 \section{Conclusion/Discussion}
 \label{sec:conclusion}
