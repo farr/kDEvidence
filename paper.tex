@@ -663,8 +663,19 @@ small local ones, meaning that it could rapidly accumulate sufficient
 points to determine whether the original run spent correct fractional
 amounts of time in the various modes.
 
-\section{Conclusion/Discussion}
+\section{Conclusion}
 \label{sec:conclusion}
+
+The need to compare evidences for multiple models arises in a large variety of physical and astronomical contexts.  In this paper, we described a new technique that allows for efficient evidence computations via a Reversible-Jump Markov chain Monte Carlo.  This technique solves the usual problem of finding good inter-model jump proposals in an RJMCMC by using a kD-tree to quickly and accurately interpolate an approximate posterior PDF from a single-model MCMC run, and then using this interpolated PDF to propose efficient inter-model jumps.  
+
+We demonstrated the efficiency of this technique on a toy model-comparison problem described in Section \ref{sec:efficiency}.  We also successfully applied this technique to the problem of selecting the best model for the observed distribution of black-hole X-ray binaries, as described in Section \ref{sec:examples} and Ref.~\cite{Farr2010}.   In addition to model comparison, the PDF interpolation described here can be useful in multi-step MCMCs to improve the sampling efficiency by selecting better jump proposal distributions or to test MCMC convergence.
+
+We have made our implementation of the technique described in this paper publicly available online at \will{URL}, and welcome readers to take advantage of this toolkit.
+
+
+\section*{Acknowledgments}
+
+We are grateful to Neil Cornish for interesting discussions.  IM acknowledges support from the NSF Astronomy and Astrophysics Postdoctoral Fellowship, award AST-0901985.  WF acknowledges support from \will{Add your acknowledgements}
 
 \bibliography{paper}
 
