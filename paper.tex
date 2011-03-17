@@ -244,10 +244,9 @@ $\vtheta$ exceeds a few.  The parameter space must typically be
 explored in a stochastic manner before the evidence integral can be
 computed.  There are several stochastic parameter-exploration
 techniques focused directly on evidence computation (e.g., nested
-sampling \cite{Skilling:2006} and MultiNest \cite{Feroz:2009}).  However, we
-frequently want to compute the posterior PDFs within each model along
-with the evidences for the various models.  One of the most common
-techniques for computing posterior PDFs in the context of a model is
+sampling \cite{Skilling:2004,Skilling:2006} and its variant MultiNest \cite{Feroz:2009}).  Although nested sampling can be used to compute the posterior PDFs within each model along
+with the evidences for the various models, perhaps the most common
+technique for computing posterior PDFs in the context of a model is
 the Markov chain Monte Carlo, which we now describe.
 
 \subsection{Markov chain Monte Carlo} \label{sec:mcmc}
@@ -335,7 +334,7 @@ in the parameter space.  Because jumps are frequently local, we will
 generally want to ignore the early points in a finite-size chain to
 avoid biases in the recovered posterior PDF due to the choice of the
 initial location.  The points thus discarded are referred to as
-"burn-in" points.
+``burn-in'' points.
 
 \subsection{RJMCMC}
 
@@ -346,7 +345,7 @@ and bias \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.
 Additional techniques for the direct integration of evidence, also
 based on a kD tree decomposition of the parameter space (see
 Sec.~\ref{sec:kDTree}), are described in \cite{Weinberg2009}.  These
-techniques are promising, but in some cases suffer \cite{Farr2010}
+techniques are promising, but in some cases suffer \cite{Farr2010} \will{Is this really the reference you meant?}
 from large variance and bias as well.  An alternative approach to
 model selection among a set of models is based on performing an MCMC
 in a ``super-model'' that encompasses all of the models under
@@ -425,22 +424,19 @@ each neighborhood) interpolation of the PDF.  There are various
 techniques that could be used to construct the set of neighborhoods
 associated with each point.
 
-Ref.~\cite{Littenberg2009} decomposed parameter space into
+Ref.~\cite{Littenberg2009} decomposed the parameter space into
 constant-volume ``bricks'' whose size was set by the typical size of
-the peaks of the PDF.  Each point was associated with the brick that
-contained it.  Unfortunately, this process does not guarantee that
-every brick contains at least one point, which is required for the
-jump proposal to cover the entire model parameter space.  The solution
-to this problem was to add a uniform distribution to the proposal PDF,
-in the form of one ``fictitious'' point per brick.  The extra uniform
-distribution from the fictituous points can represent a significant
-cost, since inter-model jumps proposed from the uniform distribution
-are unlikely to be accepted.  Additionally, the bricks in this
+the peaks of the PDF.  Each sample was associated with the brick that
+contained it, and the probability of proposing a jump into a particular brick is thus proportional to the
+number of samples within that brick.  Additionally, an extra uniform jump proposal was added to allow for jumps into bricks that did not contain any points, so that the jump 
+proposal covers the entire model parameter space.  
+%The solution to this problem was to add a uniform distribution to the proposal PDF, in the form of one ``fictitious'' point per brick.  The extra uniform distribution from the fictitious points can represent a significant cost, since inter-model jumps proposed from the uniform distribution are unlikely to be accepted.  
+However, the bricks in this
 algorithm do not adapt to the local structure of the PDF.  One must
 either use small bricks to capture the local structure of the PDF,
-placing many bricks in regions without MCMC samples, or use large
-bricks, missing the local strucutre of the PDF in exchange for fewer
-empty bricks.
+placing many bricks in regions without MCMC samples (which can increase memory management and access costs, even for sparse matrices), or use large
+bricks, missing the local structure of the PDF in exchange for fewer
+empty bricks. \will{Are you happy with this bit of editing?}
 
 An alternate technique for producing adaptive neighborhoods would be
 to use the Voronoi regions associated with each MCMC sample.  The
@@ -452,15 +448,14 @@ Ref.~\cite{Littenberg2009}, which is minimally adaptive.
 Unfortunately, defining the Voronoi regions requires a metric on
 parameter space, which may be difficult or impossible to define.
 Also, the computational cost for computing the Voronoi regions
-increases rapidly with
-dimension.  % Apparently the exact computational cost is not known in
-            % arbitrary dimension.
+increases rapidly with dimensionality.  
+% Apparently the exact computational cost is not known in arbitrary dimension.
 
-Here we propose to use a decomposition of parameter space into
-neighborhoods based on a datastructure called a kD-tree (see, e.g.\
+Here we propose to use a decomposition of the parameter space into
+neighborhoods based on a data structure called a kD-tree (see, e.g.\
 \cite{Berg2008} or \cite{Gaede1998}).  The decomposition is more
 adaptive than the cells of Ref.~\cite{Littenberg2009}, and more
-efficient in high dimension than the Voronoi decomposition.
+efficient in high-dimensional spaces than the Voronoi decomposition.
 
 A kD-tree is a binary, space-partitioning tree.  To partition a set of
 points into a kD-tree, begin by placing them in a rectangular box that
