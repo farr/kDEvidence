@@ -151,33 +151,40 @@ time an RJMCMC transitions between models, the information about the
 choices of parameter values in the previous model is lost; subsequent
 jumps into that model must ``start fresh,'' and are correspondingly
 unlikely to be accepted, delaying convergence of the RJMCMC sample
-chain.
+chain.  One of the first papers to address this issue was Reference
+\cite{Littenberg2009}, where the authors propose a method for
+producing inter-model jumps in an RJMCMC that relies on interpolating
+single-model posterior distributions using a box decomposition of
+parameter space.  
 
-Here we introduce a technique for improving the acceptance ratio of
-inter-model jumps in an RJMCMC, leading to dramatically improved
-convergence of RJMCMC sample chains.  The technique uses a kD-tree
-data structure to construct an approximation to each model's posterior
-parameter distribution.  We draw jump proposals into the model from this approximation to its posterior.  Because jumps are proposed
-preferentially to locations favored by the single-model posterior, the
-RJMCMC compares ``good'' locations in parameter space across all the
-models, and convergence is generally rapid.  We have successfully applied this RJMCMC technique to a 10-way model selection among alternative mass distribution models for black-hole X-ray binaries \cite{Farr2010}.
+Here we introduce an alternative technique for improving the
+acceptance ratio of inter-model jumps in an RJMCMC, leading to
+dramatically improved convergence of RJMCMC sample chains.  The
+technique uses a kD-tree data structure to construct an approximation
+to each model's posterior parameter distribution.  We draw jump
+proposals into the model from this approximation to its posterior.
+Because jumps are proposed preferentially to locations favored by the
+single-model posterior, the RJMCMC compares ``good'' locations in
+parameter space across all the models, and convergence is generally
+rapid.  We have successfully applied this RJMCMC technique to a 10-way
+model selection among alternative mass distribution models for
+black-hole X-ray binaries \cite{Farr2010}.
 
-Reference \cite{Littenberg2009} proposed an alternate method for
-producing inter-model jumps in an RJMCMC that relies on a box
-decomposition of parameter space, but uses fixed-sized boxes.  The box
-size is fixed, so the method cannot adapt to the local structure of
-the posterior, and becomes asymptotically inefficient for
-high-dimensional parameter spaces or highly peaked posteriors.
-Meanwhile, the approximation to the posterior distribution produced by
-the kD-tree is a constant-in-box interpolation of the posterior,
-similar in spirit to the phase-space density interpolants produced
-from N-body positions and momenta in Reference \cite{Ascasibar2005}.
-The kD-tree interpolation is effective in parameter spaces of
-arbitrary dimensionality, and is quite space-efficient, requiring
-$\order{N}$ storage space and $\order{\log N}$ time to produce each
-proposed jump, where $N$ is the number of single-model MCMC samples
-used to construct the interpolation.
-
+The method of Reference \cite{Littenberg2009} for producing
+inter-model jumps in an RJMCMC relies on a box decomposition of
+parameter space, using fixed-sized boxes.  The method cannot adapt to
+the local structure of the posterior, and becomes asymptotically
+inefficient for high-dimensional parameter spaces or highly peaked
+posteriors.  Meanwhile, the approximation to the posterior
+distribution produced by the kD-tree is a constant-in-box
+interpolation of the posterior, similar in spirit to the phase-space
+density interpolants produced from N-body positions and momenta in
+Reference \cite{Ascasibar2005}.  The kD-tree interpolation is
+effective in parameter spaces of arbitrary dimensionality, and is
+quite space-efficient, requiring $\order{N}$ storage space and
+$\order{\log N}$ time to produce each proposed jump, where $N$ is the
+number of single-model MCMC samples used to construct the
+interpolation.
 
 The structure of this paper is as follows.  In Section
 \ref{sec:reversible-jump} we introduce in more detail the concept of a
@@ -463,7 +470,11 @@ efficient in high-dimensional spaces than the Voronoi decomposition.
 
 A kD-tree is a binary, space-partitioning tree.  To partition a set of
 points into a kD-tree, begin by placing them in a rectangular box that
-contains all of parameter space.  Then proceed recursively:
+contains all of parameter space.  Then proceed recursively%
+\footnote{The kD-tree datastructure defined here places box boundaries
+  between the points.  An alternate definition common in the
+  literature places box boundaries on the median point, but such a
+  definition is inconvenient for our purposes.}: %
 \begin{enumerate}
 \item If the given box contains exactly one point, stop; this is a
   leaf of the tree.  Otherwise:
