@@ -5,3 +5,5 @@ paper.pdf
 *.bbl
 *.out
 *.blg
+paper.synctex.gz
+paperNotes.bib
