@@ -1,4 +1,4 @@
-\IfFileExists{revtex4-1.cls}{\documentclass[prd, reprint,
+\IfFileExists{revtex4-1.cls}{\documentclass[aps, prd, reprint,
 superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4-1}}{ 
 \IfFileExists{revtex4.cls}{\documentclass[prd,
 superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
@@ -24,18 +24,23 @@ superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
 
 \newcommand{\order}[1]{\mathcal{O}\left( #1 \right)}
 
-\def\aj{Astronomical Journal}                 % Astronomical Journal
-\def\apj{Astrophysical Journal}                % Astrophysical Journal
-\def\apjl{Astrophysical Journal}             % Astrophysical Journal, Letters
+\def\aj{Astron. J.}                 % Astronomical Journal
+\def\apj{Astrophys. J.}                % Astrophysical Journal
+\def\apjl{Astrophys. J. Lett.}             % Astrophysical Journal, Letters
 \def\pasj{PASJ}
-\def\apjs{ApJS}              % Astrophysical Journal, Supplement
-\def\mnras{MNRAS}            % Monthly Notices of the RAS
-\def\prd{Phys.~Rev.~D}       % Physical Review D
-\def\prl{Phys.~Rev.~Lett}    % Physical Review Letters
-\def\cqg{Class.~Quant.~Grav.~}%Classical and Quantum Gravity
-\def\araa{ARA\&A}             % Annual Review of Astron and Astrophys
+\def\apjs{Astrophys. J., Suppl. Ser.}              % Astrophysical Journal, Supplement
+\def\mnras{Mon. Not. R. Astron. Soc.}            % Monthly Notices of the RAS
+\def\prd{Phys. Rev. D}       % Physical Review D
+\def\prl{Phys. Rev. Lett.}    % Physical Review Letters
+\def\cqg{Class. Quant. Grav.}%Classical and Quantum Gravity
+\def\araa{Annu. Rev. Astron. Astrophys.}             % Annual Review of Astron and Astrophys
 \def\nat{Nature}              % Nature
-\def\aap{A\&A}                % Astronomy and Astrophysics
+\def\aap{Astron. Astrophys.}                % Astronomy and
+                                % Astrophysics
+\def\jasa{J. Am. Stat. Assoc.}
+\def\pccp{Phys. Chem. Chem. Phys.}
+\def\jrssb{J. R. Stat. Soc. B}
+\def\aipcs{AIP Conf. Ser.}
 
 \IfFileExists{apsrev4-1.bst}{\bibliographystyle{apsrev4-1}}
 \IfFileExists{apsrev4.bst}{\bibliographystyle{apsrev4}}
@@ -503,7 +508,7 @@ are shown in Figure \ref{fig:kD-tree}.
 
 \begin{figure}
   \begin{center}
-    \includegraphics[width=0.8\columnwidth]{kdtree.png}
+    \includegraphics[width=0.8\columnwidth]{kdtree}
   \end{center}
   \caption{\label{fig:kD-tree} The neighborhoods from a kD-tree
     constructed around a set of points that are normally distributed
