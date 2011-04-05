@@ -1,6 +1,6 @@
-\IfFileExists{revtex4-1.cls}{\documentclass[prd, twocolumn, lengthcheck,
+\IfFileExists{revtex4-1.cls}{\documentclass[prd, reprint,
 superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4-1}}{ 
-\IfFileExists{revtex4.cls}{\documentclass[prd, preprint,
+\IfFileExists{revtex4.cls}{\documentclass[prd,
 superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
 }
 
@@ -84,6 +84,8 @@ superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
   posterior distribution.
 \end{abstract}
 
+\pacs{02.70.Tt, 95.75.Pq, 07.05.Kf}
+
 \maketitle
 
 \section{Introduction}
@@ -151,11 +153,10 @@ time an RJMCMC transitions between models, the information about the
 choices of parameter values in the previous model is lost; subsequent
 jumps into that model must ``start fresh,'' and are correspondingly
 unlikely to be accepted, delaying convergence of the RJMCMC sample
-chain.  One of the first papers to address this issue was Reference
-\cite{Littenberg2009}, where the authors propose a method for
-producing inter-model jumps in an RJMCMC that relies on interpolating
-single-model posterior distributions using a box decomposition of
-parameter space.  
+chain.  Reference \cite{Littenberg2009} addressed this issue by
+proposing a new method for producing inter-model jumps in an RJMCMC
+that relies on interpolating single-model posterior distributions
+using a box decomposition of parameter space.
 
 Here we introduce an alternative technique for improving the
 acceptance ratio of inter-model jumps in an RJMCMC, leading to
