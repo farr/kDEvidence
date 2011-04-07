@@ -1,14 +1,9 @@
-\IfFileExists{revtex4-1.cls}{\documentclass[aps, prd, reprint,
-superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4-1}}{ 
-\IfFileExists{revtex4.cls}{\documentclass[prd,
-superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
-}
+\documentclass{iopart}
 
-
-\usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{color}
 \usepackage{graphicx}
+\usepackage{harvard}
 
 \newcommand{\vtheta}{\vec{\theta}}
 
@@ -41,41 +36,37 @@ superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
 \def\pccp{Phys. Chem. Chem. Phys.}
 \def\jrssb{J. R. Stat. Soc. B}
 \def\aipcs{AIP Conf. Ser.}
+\def\jcp{J. Chem. Phys.}
 
-\IfFileExists{apsrev4-1.bst}{\bibliographystyle{apsrev4-1}}
-\IfFileExists{apsrev4.bst}{\bibliographystyle{apsrev4}}
+\bibliographystyle{jphysicsB}
 
 \begin{document}
-\title{An Efficient Interpolation Technique for Jump Proposals in
-  Reversible-Jump Markov Chain Monte Carlo Calculations}
+\title[Efficient Jump Proposals in RJMCMC]{An Efficient Interpolation
+  Technique for Jump Proposals in Reversible-Jump Markov Chain Monte
+  Carlo Calculations}
 
 \date{\today}
 
-\author{Will M. Farr}
-\email{w-farr@northwestern.edu}
+\author{W M Farr$^1$ and I Mandel$^2$}
 
-\affiliation{Center for Interdisciplinary Exploration and Research in Astrophysics (CIERA) \\ Department of Physics and Astronomy, Northwestern University}
+\address{$^1$ Center for Interdisciplinary Exploration and Research in Astrophysics (CIERA) \\ Department of Physics and Astronomy, Northwestern University}
 
-\author{Ilya Mandel}
-\email{ilyamandel@chgk.info}
+\address{$^2$ MIT Kavli Institute; and University of Birmingham, UK}
 
-\affiliation{MIT Kavli Institute; and University of Birmingham, UK}
+\eads{\mailto{w-farr@northwestern.edu}, \mailto{ilyamandel@chgk.info}}
 
 \begin{abstract}
   Selection among alternative theoretical models given an observed
   data set is an important challenge in many areas of physics and
-  astronomy.
-  %ranging from gravitational-wave data analysis to
-  %measurements of black-hole masses in X-ray binaries.
-  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an extremely
-  powerful technique for performing Bayesian model selection, but it
-  suffers from a fundamental difficulty: it requires jumps between
-  model parameter spaces, but cannot retain a memory of the favored
-  locations in more than one parameter space at a time.  Thus, a naive
-  jump between parameter spaces is unlikely to be accepted in the MCMC
-  algorithm and convergence is correspondingly slow.  Here we
-  demonstrate an interpolation technique that uses samples from
-  single-model MCMCs to propose inter-model jumps from an
+  astronomy.  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an
+  extremely powerful technique for performing Bayesian model
+  selection, but it suffers from a fundamental difficulty: it requires
+  jumps between model parameter spaces, but cannot retain a memory of
+  the favored locations in more than one parameter space at a time.
+  Thus, a naive jump between parameter spaces is unlikely to be
+  accepted in the MCMC algorithm and convergence is correspondingly
+  slow.  Here we demonstrate an interpolation technique that uses
+  samples from single-model MCMCs to propose inter-model jumps from an
   approximation to the single-model posterior of the target parameter
   space.  The interpolation technique, based on a kD-tree data
   structure, is adaptive and efficient in arbitrary dimensions.  We
@@ -90,6 +81,8 @@ superscriptaddress, showpacs, letterpaper, nofootinbib]{revtex4}}{}
 \end{abstract}
 
 \pacs{02.70.Tt, 95.75.Pq, 07.05.Kf}
+
+\submitto{\CQG}
 
 \maketitle
 
@@ -118,19 +111,18 @@ produce parameter samples with density proportional to the posterior
 probability distribution.  In MCMC techniques, the primary target is
 an accurate estimate of the posterior distribution.  (We note that an
 alternative stochastic method for exploring a model parameter space,
-nested sampling \cite{Skilling:2004, Skilling:2006,Feroz:2009},
-focuses on evidence computation rather than sampling the posterior
-probability density functions.)  It is not straightforward to compute
-the model evidence from MCMC samples.  The most direct way to estimate
-the evidence for a model from MCMC samples is to compute the
-harmonic-mean estimator, but this estimator of the evidence suffers
-from infinite
-variance\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  MCMC
+nested sampling \cite{Skilling:2004,Skilling:2006,Feroz:2009}, focuses
+on evidence computation rather than sampling the posterior probability
+density functions.)  It is not straightforward to compute the model
+evidence from MCMC samples.  The most direct way to estimate the
+evidence for a model from MCMC samples is to compute the harmonic-mean
+estimator, but this estimator of the evidence suffers from infinite
+variance \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  MCMC
 implementations with parallel tempering \cite{EarlDeem:2005} allow for
 evidence computation via thermodynamic integration, but these can be
 computationally costly.
 
-Reference \cite{Weinberg2009} gives a method for directly computing
+\cite{Weinberg2009} gives a method for directly computing
 the evidence integral from existing MCMC samples by using a kD-tree
 data structure to decompose a parameter space into boxes containing
 the MCMC sample points.  The integral is approximated as a sum over
@@ -142,10 +134,10 @@ MCMC samples.
 When the goal is model selection between several known models, only
 the \emph{relative} evidence of each model is needed.  In this
 circumstance, the Reversible Jump MCMC technique first introduced in
-Reference \cite{Green1995} is one of the most reliable and accurate
-ways to compare the models.  Reversible Jump MCMC (RJMCMC), described
-more fully in Section \ref{sec:reversible-jump}, performs a standard
-MCMC in a superspace that is a direct sum of all the model parameter
+\cite{Green1995} is one of the most reliable and accurate ways to
+compare the models.  Reversible Jump MCMC (RJMCMC), described more
+fully in Section \ref{sec:reversible-jump}, performs a standard MCMC
+in a superspace that is a direct sum of all the model parameter
 spaces.  Such an MCMC involves both intra- and inter-model jumps; the
 number of MCMC samples in each model's parameter space is proportional
 to that model's relative evidence in the suite of models being
@@ -158,10 +150,10 @@ time an RJMCMC transitions between models, the information about the
 choices of parameter values in the previous model is lost; subsequent
 jumps into that model must ``start fresh,'' and are correspondingly
 unlikely to be accepted, delaying convergence of the RJMCMC sample
-chain.  Reference \cite{Littenberg2009} addressed this issue by
-proposing a new method for producing inter-model jumps in an RJMCMC
-that relies on interpolating single-model posterior distributions
-using a box decomposition of parameter space.
+chain.  \cite{Littenberg2009} addressed this issue by proposing a new
+method for producing inter-model jumps in an RJMCMC that relies on
+interpolating single-model posterior distributions using a box
+decomposition of parameter space.
 
 Here we introduce an alternative technique for improving the
 acceptance ratio of inter-model jumps in an RJMCMC, leading to
@@ -176,21 +168,20 @@ rapid.  We have successfully applied this RJMCMC technique to a 10-way
 model selection among alternative mass distribution models for
 black-hole X-ray binaries \cite{Farr2010}.
 
-The method of Reference \cite{Littenberg2009} for producing
-inter-model jumps in an RJMCMC relies on a box decomposition of
-parameter space, using fixed-sized boxes.  The method cannot adapt to
-the local structure of the posterior, and becomes asymptotically
-inefficient for high-dimensional parameter spaces or highly peaked
-posteriors.  Meanwhile, the approximation to the posterior
-distribution produced by the kD-tree is a constant-in-box
-interpolation of the posterior, similar in spirit to the phase-space
-density interpolants produced from N-body positions and momenta in
-Reference \cite{Ascasibar2005}.  The kD-tree interpolation is
-effective in parameter spaces of arbitrary dimensionality, and is
-quite space-efficient, requiring $\order{N}$ storage space and
-$\order{\log N}$ time to produce each proposed jump, where $N$ is the
-number of single-model MCMC samples used to construct the
-interpolation.
+The method of \cite{Littenberg2009} for producing inter-model jumps in
+an RJMCMC relies on a box decomposition of parameter space, using
+fixed-sized boxes.  The method cannot adapt to the local structure of
+the posterior, and becomes asymptotically inefficient for
+high-dimensional parameter spaces or highly peaked posteriors.
+Meanwhile, the approximation to the posterior distribution produced by
+the kD-tree is a constant-in-box interpolation of the posterior,
+similar in spirit to the phase-space density interpolants produced
+from N-body positions and momenta in \cite{Ascasibar2005}.  The
+kD-tree interpolation is effective in parameter spaces of arbitrary
+dimensionality, and is quite space-efficient, requiring $\order{N}$
+storage space and $\order{\log N}$ time to produce each proposed jump,
+where $N$ is the number of single-model MCMC samples used to construct
+the interpolation.
 
 The structure of this paper is as follows.  In Section
 \ref{sec:reversible-jump} we introduce in more detail the concept of a
@@ -239,7 +230,7 @@ This implies that the evidence is equal to
 where $V_i$ is the parameter space volume in model $M_i$.  For model
 comparison, we are interested in the posterior probability of a
 particular model, $M_i$, given the data, $p(M_i|d)$.  Using Bayes'
-rule, we see that this involves the evidence (Eq.~\eqref{evidence}):
+rule, we see that this involves the evidence \eref{evidence}:
 \be
 p(M_i|d) = \frac{p(d|M_i) p(M_i)}{p(d)},
 \ee
@@ -252,7 +243,7 @@ p(d)=\sum_i p(d|M_i) p(M_i).
 When selecting among alternative models, we are interested in finding
 the model with the highest posterior probability $p(M_i|d)$.  However,
 attempts to directly compute the evidence by performing the
-integration in Eq.~\eqref{evidence} are generally very difficult in a
+integration in \eref{evidence} are generally very difficult in a
 multi-dimensional, multi-modal parameter space when the likelihood has
 to be evaluated numerically.  In particular, a grid-based integral
 quickly becomes computationally unfeasible as the dimensionality of
@@ -298,8 +289,8 @@ $p(\vtheta^{(j+1)})=p(\vtheta^{(j+1)}|d,M)$; this condition is known as
 ``detailed balance.''
 
 One way to produce such a sequence of samples is via the
-Metropolis-Hastings algorithm, first proposed in Reference
-\cite{Metropolis:1953}, and later generalized by Hastings \cite{Hastings:1970}:
+Metropolis-Hastings algorithm, first proposed in
+\cite{Metropolis:1953}, and later generalized in \cite{Hastings:1970}:
 \begin{enumerate}
 \item Given a current state $\vtheta^{(j)}$, propose the next state
   $\vtheta^p$ by drawing from a jump proposal distribution with
@@ -646,17 +637,19 @@ with being drawn from the distribution of the combined population
 \cite{Farr2010}.
 
 Gravitational-wave astronomy provides the setting for another ongoing
-study.  Interesting triggers from the LIGO \cite{InitLIGO} and Virgo \cite{Virgo}
-gravitational-wave detector pipeline that searches for compact binary
-coalescences are followed up with Bayesian parameter estimation tools (see, e.g., \cite{Rover:2006ni, vanderSluys:2008b, VeitchVecchio:2009}).
-In general, several possible models for the data are considered,
+study.  Interesting triggers from the LIGO \cite{InitLIGO} and Virgo
+\cite{Virgo} gravitational-wave detector pipeline that searches for
+compact binary coalescences are followed up with Bayesian parameter
+estimation tools (see, e.g.,
+\cite{Rover:2006ni,vanderSluys:2008b,VeitchVecchio:2009}).  In
+general, several possible models for the data are considered,
 including a pure noise model, noise superimposed on a non-spinning
 gravitational-wave signal, or noise superimposed on a gravitational
 wave signal that includes significant spin or spins in the binary
 components.  The models can include a large number of parameters (up
-to 15 for the model with two spinning components \cite{Raymond:2010}), and RJMCMC with
-interpolation via kD trees is again successful at computing the model
-evidences. 
+to 15 for the model with two spinning components \cite{Raymond:2010}),
+and RJMCMC with interpolation via kD trees is again successful at
+computing the model evidences.
 
 As discussed in Section \ref{sec:mcmc}, finding an efficient jump
 proposal distribution can be a challenge even for a single-model MCMC.
@@ -730,6 +723,8 @@ We are grateful to Neil Cornish for interesting discussions.  IM
 acknowledges support from the NSF Astronomy and Astrophysics
 Postdoctoral Fellowship, award AST-0901985.  WF acknowledges support
 from NSF grant AST0908930 and NASA grant NNX09AJ56G.
+
+\section*{References}
 
 \bibliography{paper}
 
