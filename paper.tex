@@ -6,6 +6,8 @@
 \usepackage{harvard}
 
 \newcommand{\vtheta}{\vec{\theta}}
+\newcommand{\Nbox}{N_\mathrm{box}}
+\newcommand{\Vbox}{V_\mathrm{box}}
 
 \newcommand{\be}{\begin{equation}}
 \newcommand{\ee}{\end{equation}}
@@ -47,13 +49,22 @@
 
 \date{\today}
 
-\author{W M Farr$^1$ and I Mandel$^2$}
+\author{W M Farr$^{1,3}$, I Mandel$^{2,3}$ and D Stevens$^{1,4}$}
 
-\address{$^1$ Center for Interdisciplinary Exploration and Research in Astrophysics (CIERA) \\ Department of Physics and Astronomy, Northwestern University}
+\address{$^1$ Center for Interdisciplinary Exploration and Research in
+  Astrophysics (CIERA), Department of Physics and Astronomy,
+  Northwestern University, Evanston IL USA}
 
-\address{$^2$ MIT Kavli Institute; and University of Birmingham, UK}
+\address{$^2$ MIT Kavli Institute, Cambridge MA USA}
 
-\eads{\mailto{w-farr@northwestern.edu}, \mailto{ilyamandel@chgk.info}}
+\address{$^3$ School of Physics and Astronomy, University of
+  Birmingham, Birmingham UK}
+
+\address{$^4$ Department of Astronomy, The Ohio State
+  University, Columbus OH USA}
+
+
+\eads{\mailto{w.farr@bham.ac.uk}, \mailto{ilyamandel@chgk.info} \mailto{dan.stevens@u.northwestern.edu}}
 
 \begin{abstract}
   Selection among alternative theoretical models given an observed
@@ -69,15 +80,15 @@
   samples from single-model MCMCs to propose inter-model jumps from an
   approximation to the single-model posterior of the target parameter
   space.  The interpolation technique, based on a kD-tree data
-  structure, is adaptive and efficient in arbitrary dimensions.  We
+  structure, is adaptive and efficient in modest dimensionality.  We
   show that our technique leads to dramatically improved convergence
   over naive jumps in an RJMCMC, and compare it to other proposals in
   the literature to improve the convergence of RJMCMCs.  We also
-  discuss the use of the same interpolation technique in two other
-  contexts: as a convergence test for a single-model MCMC and as a way
-  to construct efficient ``global'' proposal distributions for
+  demonstrate the use of the same interpolation technique as a way to
+  construct efficient ``global'' proposal distributions for
   single-model MCMCs without prior knowledge of the structure of the
-  posterior distribution.
+  posterior distribution, and discuss improvements that permit the
+  method to be used in higher-dimensional spaces efficiently.
 \end{abstract}
 
 \pacs{02.70.Tt, 95.75.Pq, 07.05.Kf}
@@ -93,11 +104,11 @@ set is an important challenge in many areas of physics and astronomy.
 In a Bayesian context, model selection involves computing the evidence
 for each model given the data.  The model evidence is an integral of
 the unnormalized posterior probability distribution over the model
-parameter space, representing the probability of obtaining the data set within that model.
-Models with larger evidence are preferred; the ratio of the evidences
-of two models is the Bayes factor between them.  The product of the
-Bayes factor and the ratio of prior probabilities for the two models yields
-the odds ratio for the models.
+parameter space, representing the probability of obtaining the data
+set within that model.  Models with larger evidence are preferred; the
+ratio of the evidences of two models is the Bayes factor between them.
+The product of the Bayes factor and the ratio of prior probabilities
+for the two models yields the odds ratio for the models.
 
 There are many ways to compute model evidences.  In low-dimensional
 parameter spaces, the unnormalized posterior probability can be
@@ -111,16 +122,17 @@ produce parameter samples with density proportional to the posterior
 probability distribution.  In MCMC techniques, the primary target is
 an accurate estimate of the posterior distribution.  (We note that an
 alternative stochastic method for exploring a model parameter space,
-nested sampling \cite{Skilling:2004,Skilling:2006,Feroz:2009}, focuses
-on evidence computation rather than sampling the posterior probability
-density functions.)  It is not straightforward to compute the model
-evidence from MCMC samples.  The most direct way to estimate the
-evidence for a model from MCMC samples is to compute the harmonic-mean
-estimator, but this estimator of the evidence suffers from infinite
-variance \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  MCMC
-implementations with parallel tempering \cite{EarlDeem:2005} allow for
-evidence computation via thermodynamic integration, but these can be
-computationally costly.
+nested sampling \cite{Skilling:2004,Skilling:2006,Feroz:2009},
+focuses on evidence computation rather than sampling the posterior
+probability density functions.)  It is not straightforward to compute
+the model evidence from MCMC samples.  The most direct way to estimate
+the evidence for a model from MCMC samples is to compute the
+harmonic-mean estimator, but this estimator of the evidence suffers
+from infinite variance
+\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  MCMC
+implementations with parallel tempering \cite{EarlDeem:2005} allow
+for evidence computation via thermodynamic integration, but these can
+be computationally costly.
 
 \cite{Weinberg2009} gives a method for directly computing
 the evidence integral from existing MCMC samples by using a kD-tree
@@ -166,7 +178,10 @@ single-model posterior, the RJMCMC compares ``good'' locations in
 parameter space across all the models, and convergence is generally
 rapid.  We have successfully applied this RJMCMC technique to a 10-way
 model selection among alternative mass distribution models for
-black-hole X-ray binaries \cite{Farr2010}.
+black-hole X-ray binaries \cite{Farr2010}.  We also provide an example
+using this method as an ``asymptotically Markovian''
+\cite{terBraak2008} jump proposal in the context of a single-model,
+nine-dimensional MCMC in Section \ref{sec:higherdim}.
 
 The method of \cite{Littenberg2009} for producing inter-model jumps in
 an RJMCMC relies on a box decomposition of parameter space, using
@@ -177,7 +192,7 @@ Meanwhile, the approximation to the posterior distribution produced by
 the kD-tree is a constant-in-box interpolation of the posterior,
 similar in spirit to the phase-space density interpolants produced
 from N-body positions and momenta in \cite{Ascasibar2005}.  The
-kD-tree interpolation is effective in parameter spaces of arbitrary
+kD-tree interpolation is effective in parameter spaces of modest
 dimensionality, and is quite space-efficient, requiring $\order{N}$
 storage space and $\order{\log N}$ time to produce each proposed jump,
 where $N$ is the number of single-model MCMC samples used to construct
@@ -187,13 +202,14 @@ The structure of this paper is as follows.  In Section
 \ref{sec:reversible-jump} we introduce in more detail the concept of a
 Reversible Jump MCMC, and describe the fundamental difficulty with a
 naive jump proposal in an RJMCMC.  In Section \ref{sec:kDTree} we
-introduce the kD-tree data structure used to decompose the parameter space
-into boxes for interpolation.  In Section \ref{sec:efficiency} we
-demonstrate the efficiency gains that are achieved from use of the
-interpolated jump proposal.  In Section \ref{sec:examples} we give
-examples of some other uses of the interpolated jump proposal, and suggest its utility in the context of a
-single-model MCMC.  Finally, in Section \ref{sec:conclusion}
-we offer a summary and some concluding remarks on the method.
+introduce the kD-tree data structure used to decompose the parameter
+space into boxes for interpolation.  In Section \ref{sec:efficiency}
+we demonstrate the efficiency gains that are achieved from use of the
+interpolated jump proposal.  In Section \ref{sec:higherdim} we give
+examples of some other uses of the interpolated jump proposal that
+suggest its utility in the context of a single-model MCMC.  Finally,
+in Section \ref{sec:conclusion} we offer a summary and some concluding
+remarks on the method.
 
 \section{Reversible Jump MCMC}
 \label{sec:reversible-jump}
@@ -290,7 +306,8 @@ $p(\vtheta^{(j+1)})=p(\vtheta^{(j+1)}|d,M)$; this condition is known as
 
 One way to produce such a sequence of samples is via the
 Metropolis-Hastings algorithm, first proposed in
-\cite{Metropolis:1953}, and later generalized in \cite{Hastings:1970}:
+\cite{Metropolis:1953}, and later generalized in
+\cite{Hastings:1970}:
 \begin{enumerate}
 \item Given a current state $\vtheta^{(j)}$, propose the next state
   $\vtheta^p$ by drawing from a jump proposal distribution with
@@ -320,7 +337,7 @@ of the chain before it converges to the posterior PDF.  Creating an
 efficient jump proposal distribution requires an understanding of the
 structure of the parameter space which may not be available until the
 PDFs are found, creating a Catch-22; one possibility for resolving
-this infinite loop is described in Section \ref{sec:examples}.
+this infinite loop is described in Section \ref{sec:higherdim}.
 
 It should be noted that although an MCMC whose jump acceptance
 criterium obeys detailed balance (as the Metropolis-Hastings algorithm
@@ -333,9 +350,7 @@ if the chain visits a sequence of local maxima, moving rarely between
 maxima, the autocorrelation length of the chain may represent a
 substantial fraction of the total number of samples, resulting in an
 effective sample size that is too small to accurately represent the
-relative sizes of the modes in the PDF (however, see Section
-\ref{sec:examples} for one intriguing suggestion for remedying this
-issue).
+relative sizes of the modes in the PDF.
 
 Finally, we note that, in practice, the randomly chosen initial
 starting point of the MCMC may be in a particularly unlikely location
@@ -460,9 +475,9 @@ increases rapidly with dimensionality.
 % Apparently the exact computational cost is not known in arbitrary dimension.
 
 Here we propose to use a decomposition of the parameter space into
-neighborhoods based on a data structure called a kD-tree (see, e.g.\
-\cite{Berg2008} or \cite{Gaede1998}).  The decomposition is more
-adaptive than the cells of Ref.~\cite{Littenberg2009}, and more
+neighborhoods based on a data structure called a kD-tree (see,
+e.g.\ \cite{Berg2008} or \cite{Gaede1998}).  The decomposition is more
+adaptive than the boxes of Ref.~\cite{Littenberg2009}, and more
 efficient in high-dimensional spaces than the Voronoi decomposition.
 
 A kD-tree is a binary, space-partitioning tree.  To partition a set of
@@ -575,18 +590,21 @@ the models for our chosen data set with these priors is
 yielding a theoretical maximum acceptance rate of inter-model jumps of
 $(1+1/r)/2 = 0.93$.
 
-We obtain $10^4$ single-model MCMC samples by independently running MCMC within each model, and use the kD-tree interpolation method described above to propose
-inter-model jumps in an RJMCMC.  The acceptance rate of inter-model
-jumps is approximately 0.8.  To explore how the efficiency of the
-method degrades as the interpolation becomes less accurate, we
-artificially truncated the kD tree with higher and higher numbers of
-points in each box (this can be accomplished during the neighborhood
-search phase by stopping the search for a box when one is found
-containing the desired number of points).  For each truncation choice, we
-performed an RJMCMC with the resulting interpolated jump proposal.
-The acceptance rate is plotted against the number of single-model MCMC points per box (kD-tree leaf) in Figure \ref{fig:acceptRate}.  The more points in each leaf of the tree when
-the search is truncated, the lower the acceptance probability; when
-points are drawn from the top level of the tree, the acceptance
+We obtain $10^4$ single-model MCMC samples by independently running
+MCMC within each model, and use the kD-tree interpolation method
+described above to propose inter-model jumps in an RJMCMC.  The
+acceptance rate of inter-model jumps is approximately 0.8.  To explore
+how the efficiency of the method degrades as the interpolation becomes
+less accurate, we artificially truncated the kD tree with higher and
+higher numbers of points in each box (this can be accomplished during
+the neighborhood search phase by stopping the search for a box when
+one is found containing the desired number of points).  For each
+truncation choice, we performed an RJMCMC with the resulting
+interpolated jump proposal.  The acceptance rate is plotted against
+the number of single-model MCMC points per box (kD-tree leaf) in
+Figure \ref{fig:acceptRate}.  The more points in each leaf of the tree
+when the search is truncated, the lower the acceptance probability;
+when points are drawn from the top level of the tree, the acceptance
 probability asymptotes to the naive draw from the prior ($\sim 5\%$).
 
 \begin{figure}
@@ -610,111 +628,163 @@ desired accuracy in the evidence ratio.  By boosting the acceptance
 rate of inter-model jumps, the interpolation method described above
 can dramatically improve the runtime of an RJMCMC.
 
-\section{Examples and other uses} 
-\label{sec:examples}
+\section{kD-Interpolated Jump Proposal in Higher-Dimensional
+  Single-Model MCMCs}
+\label{sec:higherdim}
 
-RJMCMC with efficient PDF interpolation via kD trees can be used in a large variety of problems in physics and astronomy, whenever Bayesian analysis is used to perform model selection.  Below, we describe several scenarios in which we have successfully applied this technique.  Moreover, PDF interpolation with a kD tree can be extremely useful in other contexts, beyond a reversible-jump MCMC.  We suggest two examples below: generating efficient jump proposal distributions in a single-model MCMC and convergence tests.
+In the model selection example from Section \ref{sec:efficiency}, the
+models have two-dimensional parameter spaces; in \cite{Farr2010} the
+highest-dimensional model had five dimensions.  As the number of
+dimensions increases the interpolation becomes more difficult for two
+reasons.  First, the number of sample points required for a given
+number of subdivisions in each dimension grows exponentially with
+dimension, so for reasonable numbers of points a higher-dimensional kD
+tree will have fewer subdivisions along each dimension.  Second, as
+the dimensionality increases the volume ``at the corners'' of each kD
+tree box becomes more significant; this problem is even more
+pronounced when the distribution of points does not align with the
+coordinate axes along which the tree subdivides.  In this section, we
+discuss practical solutions to this issue in the context of a
+single-model MCMC, concluding with an example of a successful
+application to gravitational-wave parameter estimation.
 
+To address the arbitrary orientation of points, the modified jump
+proposal does not descend to the leaf-nodes of the tree, but instead
+stops descending whenever the number of points in the box falls below
+a threshold, $\Nbox$.  We then find the principal axes of the points
+contained in this box and draw from a modified box which is aligned
+with these axes and whose center is the mean of the points contained
+within the rectangular box. The new point is chosen uniformly from
+within the bounds of the modified box, subject to the restriction that
+it also lie within the original, coordinate-aligned box.  Figure
+\ref{fig:PCC} illustrates this two-box method.
 
-We have successfully employed the RJMCMC technique described above
-when evaluating several alternative models for the distribution of the
-masses of black holes in X-ray binaries \cite{Farr2010}.  We
-performed a Bayesian analysis of the mass distribution of stellar-mass
-black holes using the observed masses of 15 low-mass X-ray binary
-systems undergoing Roche lobe overflow and five high-mass, wind-fed
-X-ray binary systems.  We considered ten different mass distribution
-models: Gaussian, double Gaussian, power law, exponential decay, log
-normal, and 1-, 2-, 3-, 4-, and 5-bin histograms.  Each model was
-described by between two and six parameters.  Model selection using
-RJMCMC with kD trees allowed us to determine that the mass
-distribution of the low-mass systems is best fit by a power-law, while
-the distribution of the combined sample is best fit by the exponential
-model.  Based on the model selection, we were able to determine which
-models would provide the best information about astrophysically
-relevant parameters, such as the minimum black hole mass.  We were
-also able to conclude that the low-mass subsample is not consistent
-with being drawn from the distribution of the combined population
-\cite{Farr2010}.
+\begin{figure}
+  \includegraphics[width=0.8\columnwidth]{PCC}
+  \caption{\label{fig:PCC} A two-dimensional illustration of the two
+    boxes involved in the modified kD proposal.  The larger box
+    aligned with the axes is the normal kD-tree box containing the
+    given points, while the tighter box is the box from which the
+    modified kd-interpolated jump proposal draws a point. }
+\end{figure}
 
-Gravitational-wave astronomy provides the setting for another ongoing
-study.  Interesting triggers from the LIGO \cite{InitLIGO} and Virgo
-\cite{Virgo} gravitational-wave detector pipeline that searches for
-compact binary coalescences are followed up with Bayesian parameter
-estimation tools (see, e.g.,
-\cite{Rover:2006ni,vanderSluys:2008b,VeitchVecchio:2009}).  In
-general, several possible models for the data are considered,
-including a pure noise model, noise superimposed on a non-spinning
-gravitational-wave signal, or noise superimposed on a gravitational
-wave signal that includes significant spin or spins in the binary
-components.  The models can include a large number of parameters (up
-to 15 for the model with two spinning components \cite{Raymond:2010}),
-and RJMCMC with interpolation via kD trees is again successful at
-computing the model evidences.
+The forward jump probability for this jump proposal is given by
+%
+\bel{modforward} P(\vtheta_i \rightarrow \vtheta_{i+1}) =
+\frac{\Nbox}{N \left(V \cap \Vbox \right)} , \ee
+%
+where N is the total number of points in the kD-tree, $\Nbox$ is the
+number of points in the box containing $\vtheta_{i+1}$, $V$ is the
+volume of the original box containing $\vtheta_{i+1}$ and $\Vbox$ is
+the volume of the principal-component box containing $\vtheta_{i+1}$.
 
-As discussed in Section \ref{sec:mcmc}, finding an efficient jump
-proposal distribution can be a challenge even for a single-model MCMC.
-This is particularly difficult when the parameter space is
-multi-modal, in which case the Markov chain can get stuck on
-individual high-posterior islands in the parameter space.  Traversals
-of low-posterior oceans by a series of short jumps are extremely
-unlikely, and random long jumps are almost always rejected, making
-sampling very inefficient.  Essentially, such isolated islands in
-parameter space behave as separate models, and weighting them by the
-number of samples in each peak then corresponds to model selection.
-Ideally, an analytical understanding of the model would allow for the
-creation of jump proposal distributions that combine short jumps
-designed to explore individual islands with directed long jumps that
-are likely to end up on neighboring islands.  However, it is not
-always possible to gain such understanding short of performing the
-MCMC itself.  One solution lies in running multiple chains that
-explore the parameter space, perhaps getting stuck on local maxima,
-and then combining the points and interpolating with a kD tree to
-create a jump proposal distribution.  Although the chains in the first
-iteration will not have transitioned between the peaks, and the
-samples will therefore not weight the separate peaks appropriately,
-this will ensure that all of the modes (islands) are included in the
-jump proposal distribution for a second stage.  This second stage can
-employ an interpolated jump proposal exactly as in the model selection
-discussed above.  Other modifications to this technique, which we are
-currently investigating, include multiple iterative stages, with the
-interpolated samples from each previous stage used as a jump proposal
-distribution for the next stage, until the posterior PDF is read off
-from the final stage; and the use of higher temperatures in the
-early-stage chains to improve sampling.
+The backward jump probability is computed in a similar fashion by
+finding the principal-component box that would contain the current set
+of parameters;.
+%
+\bel{modbackward} P(\vtheta_{i+1} \rightarrow \vtheta_{i}) =
+\frac{\Nbox'}{N\left(V' \cap \Vbox'\right)} , \ee
+%
+where $\Nbox'$ is the number of points in the original box containing
+$\vtheta_i$, $V'$ is the volume of the kD box containing $\vtheta_i$,
+and $\Vbox'$ is the volume of the principal-axes box containing
+$\vtheta_i$.  Note, however, that the current parameters may lie in a
+region of the kD box that does not intersect the principal axes box;
+in this case, the backward jump probability is zero, and the algorithm
+rejects the proposed step.  When used as the only jump proposal for an
+RJMCMC, it is important that the kD tree proposal be capable of
+proposing points in all allowed regions of parameter space; on the
+other hand, when the kD proposal is used as one of several proposals
+in the context of an MCMC, this is no longer a requirement.
 
-An example of a multi-modal parameter space where chains can get stuck
-on high-posterior islands comes from antipodal sky location
-degeneracies for networks of three ground-based gravitational-wave
-interferometers or for low-frequency gravitational wave signals in the
-proposed space-borne instrument LISA \cite{LISA}.  Although PDFs
-produced by MCMC chains will generally show both locations on the sky,
-the chain length may not be sufficiently long in practice to include
-enough jumps between the two high-likelihood antipodal locations.  In
-general, the relative weight of two separated peaks is determined with
-a fractional error that scales as
-$1/\sqrt{N_{\textnormal{transitions}}}$, where
-$N_{\textnormal{transitions}}$ is the number of transitions between
-the peaks.  By increasing the number of proposed transitions, the
-convergence of such PDFs can be enhanced using the kD-tree
-interpolated proposal.  As described above, one could test the convergence of the PDF 
-by running a followup MCMC with a jump proposal
-distribution from an interpolation of the first original PDF.  This
-follow-up MCMC would attempt large global jump proposals rather than
-small local ones, meaning that it could rapidly accumulate sufficient
-points to determine whether the original run spent the correct fractional
-amounts of time in the various modes.
+It can also be advantageous, particularly in high dimensional spaces,
+to accumulate more points into the kD tree as the MCMC explores more
+of the parameter space.  Because this introduces a dependence on the
+previous states of the MCMC, the jump proposal is no longer
+Markovian.  However, it remains \emph{asymptotically} Markovian, which
+ensures that the equilibrium distribution of the MCMC is correct.  To
+efficiently insert points into the tree as the chain accumulates them,
+the algorithm from Section \ref{sec:kDTree} must be modified:
+\begin{enumerate}
+\item Instead of partitioning the point set at its median, we now
+  partition the bounding box at its geometric center along a
+  particular dimension, which cycles as we descend the tree levels.
+  Note that this allows for empty boxes if all the points cluster to
+  one side of the domain.
+\item When inserting a point, we descend the tree to a leaf node,
+  which now can be either empty or contain one point.  If it is empty,
+  we insert the point at this node.  If it contains one point, we
+  subdivide the appropriate dimension, and place both points into the
+  two sub-boxes.  If both land in the same sub-box, we continue
+  subdividing, until each box in the sub-sub-sub... tree contains one
+  or zero points.
+\end{enumerate}
+Insertion of a point is $\order{\log N}$, since it involves a constant
+amount of work per tree level, and there are $\log N$ tree levels.
+Neighborhood lookup proceeds as before, and is therefore also
+$\order{\log N}$.  
+
+We have implemented this modified kD tree proposal as one of many jump
+proposals in the \texttt{LALInferenceMCMC} sampler
+\cite{Raymond2009,Raymond:2010,Raymond2012}.
+\texttt{LALInferenceMCMC} is a MCMC code, based on the LIGO algorithms
+library, designed to sample the posterior on parameters of
+compact-object binaries (masses, orbital orientation, distance, sky
+position, etc) implied by their gravitational wave signals in
+Earth-based gravitational wave detectors like LIGO.  The simplest such
+signal has a nine-dimensional parameter space, and the posterior often
+includes near-degeneracies and multiple modes that make convergence of
+the MCMC chain very slow with traditional proposals.  Figure
+\ref{fig:accratio} shows the acceptance ratio for the kD tree jump
+proposal in such a simulation.  In spite of the very low acceptance
+rate of the proposal, applying the kD tree proposal to one out of
+twenty proposed jumps improved the convergence time of the simulation
+by a factor of two compared to the standard suite of proposals because
+it is particularly efficient at producing ``mode-hopping'' jumps,
+which are difficult to produce with the other proposals in
+\texttt{LALInferenceMCMC}.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.8\columnwidth]{linearlog3}
+  \end{center}
+  \caption{\label{fig:accratio} The cumulative parameter acceptance
+    ratio for the modified kD-interpolated jump proposal used in the
+    \texttt{LALInferenceMCMC} code as a function of the number of
+    steps (in hundreds). In spite of the small acceptance ratio, the
+    kD tree proposal, applied to one in twenty proposed jumps,
+    improved the convergence time of the sampler by a factor of two
+    compared to using only the standard suite of proposals.}
+\end{figure}
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-The need to compare evidences for multiple models arises in a large variety of physical and astronomical contexts.  In this paper, we described a new technique that allows for efficient evidence computations via a Reversible-Jump Markov chain Monte Carlo.  This technique solves the usual problem of finding good inter-model jump proposals in an RJMCMC by using a kD-tree to quickly and accurately interpolate an approximate posterior PDF from a single-model MCMC run, and then using this interpolated PDF to propose efficient inter-model jumps.  
+The need to compare evidences for multiple models arises in a large
+variety of physical and astronomical contexts.  In this paper, we
+described a new technique that allows for efficient evidence
+computations via a Reversible-Jump Markov chain Monte Carlo.  This
+technique solves the usual problem of finding good inter-model jump
+proposals in an RJMCMC by using a kD-tree to quickly and accurately
+interpolate an approximate posterior PDF from a single-model MCMC run,
+and then using this interpolated PDF to propose efficient inter-model
+jumps.
 
-We demonstrated the efficiency of this technique on a toy model-comparison problem described in Section \ref{sec:efficiency}.  We also successfully applied this technique to the problem of selecting the best model for the observed distribution of black-hole X-ray binaries, as described in Section \ref{sec:examples} and Ref.~\cite{Farr2010}.   In addition to model comparison, the PDF interpolation described here can be useful in multi-step MCMCs to improve the sampling efficiency by selecting better jump proposal distributions or to test MCMC convergence.
+We demonstrated the efficiency of this technique on a toy
+model-comparison problem described in Section \ref{sec:efficiency}.
+We also successfully applied this technique to the problem of
+selecting the best model for the observed distribution of black-hole
+X-ray binaries, as described in Ref.~\cite{Farr2010}.  In addition to
+model comparison, the PDF interpolation described here can be useful
+in multi-step MCMCs to improve the sampling efficiency by selecting
+better jump proposal distributions or to test MCMC convergence.
 
 We have made our implementation of the technique described in this
 paper publicly available online at
-\url{http://github.com/farr/mcmc-ocaml}, and welcome readers to take
-advantage of this toolkit.
+\url{http://github.com/farr/mcmc-ocaml}, and also in the
+\texttt{LALInferenceMCMC} sampler, at
+\url{https://www.lsc-group.phys.uwm.edu/daswg/projects/lalsuite.html}.
+We welcome readers to take advantage of this toolkit.
 
 
 \section*{Acknowledgments}
@@ -722,7 +792,8 @@ advantage of this toolkit.
 We are grateful to Neil Cornish for interesting discussions.  IM
 acknowledges support from the NSF Astronomy and Astrophysics
 Postdoctoral Fellowship, award AST-0901985.  WF acknowledges support
-from NSF grant AST0908930 and NASA grant NNX09AJ56G.
+from NSF grant AST0908930 and NASA grant NNX09AJ56G. DS acknowledges
+support from a Northwestern University Summer Undergraduate Research Grant.
 
 \section*{References}
 
