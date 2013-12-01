@@ -1,9 +1,12 @@
 \documentclass{iopart}
+%\documentclass{article}
 
 \usepackage{hyperref}
 \usepackage{color}
 \usepackage{graphicx}
 \usepackage{harvard}
+\usepackage{ulem}
+%\usepackage{natbib}
 
 \newcommand{\vtheta}{\vec{\theta}}
 \newcommand{\Nbox}{N_\mathrm{box}}
@@ -16,7 +19,7 @@
 \newcommand{\ea}{\end{eqnarray}}
 \newcommand{\bal}[1]{\begin{eqnarray}\label{#1}}
 
-\newcommand{\ilya}[1]{{\color{red} \bf Ilya: #1}}
+\newcommand{\ilya}[1]{{\color{red} \bf #1}}
 \newcommand{\will}[1]{{\color{blue} \bf Will: #1}}
 
 \newcommand{\order}[1]{\mathcal{O}\left( #1 \right)}
@@ -64,7 +67,7 @@
   University, Columbus OH USA}
 
 
-\eads{\mailto{w.farr@bham.ac.uk}, \mailto{ilyamandel@chgk.info} \mailto{dan.stevens@u.northwestern.edu}}
+\eads{\mailto{w.farr@bham.ac.uk}, \mailto{imandel@star.sr.bham.ac.uk} \mailto{dan.stevens@u.northwestern.edu}}
 
 \begin{abstract}
   Selection among alternative theoretical models given an observed
@@ -73,7 +76,7 @@
   extremely powerful technique for performing Bayesian model
   selection, but it suffers from a fundamental difficulty: it requires
   jumps between model parameter spaces, but cannot retain a memory of
-  the favored locations in more than one parameter space at a time.
+  the favored locations in more than one parameter space at a time. \ilya{[Not quite true -- see 2.3 -- maybe we can find a better way of saying this in the abstract that doesn't require caveats?]}
   Thus, a naive jump between parameter spaces is unlikely to be
   accepted in the MCMC algorithm and convergence is correspondingly
   slow.  Here we demonstrate an interpolation technique that uses
@@ -102,7 +105,7 @@
 Selection among alternative theoretical models given an observed data
 set is an important challenge in many areas of physics and astronomy.
 In a Bayesian context, model selection involves computing the evidence
-for each model given the data.  The model evidence is an integral of
+for \sout{each model given the data} \ilya{the data given each model}.  The model evidence is an integral of
 the unnormalized posterior probability distribution over the model
 parameter space, representing the probability of obtaining the data
 set within that model.  Models with larger evidence are preferred; the
@@ -114,10 +117,10 @@ There are many ways to compute model evidences.  In low-dimensional
 parameter spaces, the unnormalized posterior probability can be
 evaluated on a grid or lattice and the integral can be performed
 directly.  For many problems or models of interest, however, the
-dimensionality of parameter space is too large to make this approach
+dimensionality of the parameter space is too large to make this approach
 practical, and stochastic sampling must be used.  
 
-Markov Chain Monte Carlo (MCMC) methods attempt to stochastically
+Markov chain Monte Carlo (MCMC) methods attempt to stochastically
 produce parameter samples with density proportional to the posterior
 probability distribution.  In MCMC techniques, the primary target is
 an accurate estimate of the posterior distribution.  (We note that an
@@ -134,13 +137,14 @@ implementations with parallel tempering \cite{EarlDeem:2005} allow
 for evidence computation via thermodynamic integration, but these can
 be computationally costly.
 
-\cite{Weinberg2009} gives a method for directly computing
+\cite{Weinberg2009} \ilya{[Not ideal reference style, but without citet, I have no idea how to fix this ;) ]}
+gives a method for directly computing
 the evidence integral from existing MCMC samples by using a kD-tree
 data structure to decompose a parameter space into boxes containing
 the MCMC sample points.  The integral is approximated as a sum over
 box volumes.  This method is promising, but it is not clear in general
 what statistical and systematic errors it introduces and how these are
-affected by the shape of the posterior distribution from which the
+affected by the shape of the posterior distribution which the
 MCMC samples.
 
 When the goal is model selection between several known models, only
@@ -162,7 +166,7 @@ time an RJMCMC transitions between models, the information about the
 choices of parameter values in the previous model is lost; subsequent
 jumps into that model must ``start fresh,'' and are correspondingly
 unlikely to be accepted, delaying convergence of the RJMCMC sample
-chain.  \cite{Littenberg2009} addressed this issue by proposing a new
+chain \ilya{(see \Sref{RJMCMC} for a caveat)}.  \cite{Littenberg2009} addressed this issue by proposing a new
 method for producing inter-model jumps in an RJMCMC that relies on
 interpolating single-model posterior distributions using a box
 decomposition of parameter space.
@@ -315,7 +319,7 @@ Metropolis-Hastings algorithm, first proposed in
 \item Compute the probability of accepting the proposed jump as
   \bel{eq:p-accept} 
 p_{\textnormal{accept}} \equiv \min\Bigl(1,
-\frac{p(\vtheta^p|d)}{p(\vtheta^{(j)}|d)} \frac{Q(\vtheta^p \to
+\frac{p(\vtheta^p|d\ilya{,M})}{p(\vtheta^{(j)}|d\ilya{,M})} \frac{Q(\vtheta^p \to
   \vtheta^{(j)})}{Q(\vtheta^{(j)} \to \vtheta^p)} \Bigr).  
 \ee
 \item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<
@@ -360,7 +364,7 @@ avoid biases in the recovered posterior PDF due to the choice of the
 initial location.  The points thus discarded are referred to as
 ``burn-in'' points.
 
-\subsection{RJMCMC}
+\subsection{RJMCMC}\label{RJMCMC}
 
 The samples produced by an MCMC algorithm can be used to directly
 perform a Monte Carlo evidence integral.  This results in a harmonic
@@ -369,8 +373,8 @@ and bias \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.
 Additional techniques for the direct integration of evidence, also
 based on a kD tree decomposition of the parameter space (see
 Sec.~\ref{sec:kDTree}), are described in \cite{Weinberg2009}.  These
-techniques are promising, but in some cases suffer \cite{Farr2010}
-from large variance and bias.  An alternative approach to model
+techniques are promising, but in some cases suffer 
+from large variance and bias \cite{Farr2010}.  An alternative approach to model
 selection among a set of models is based on performing an MCMC in a
 ``super-model'' that encompasses all of the models under
 consideration; this is known the the Reversible Jump Markov chain
@@ -385,14 +389,14 @@ MCMC in the ``super-model'' parameter space just like a regular MCMC;
 we propose jumps to different parameters within a model (intramodel
 jumps) and jumps to a different model with different parameters
 (intermodel jumps).  The resulting chain samples from the posterior
-$p(M_i,\vtheta_i|d)$.  As in a usual MCMC, the PDF on the model as a
+$p(M_i,\ilya{\{\vtheta_i\}}|d)$.  As in a usual MCMC, the PDF on the model as a
 parameter, with other parameters ignored, is obtained by marginalizing
 over the remaining parameters.  The posterior probability of a model
 is proportional to the number of counts
 %
 \be
 %
-p(M_i|d) = \int d\vtheta_i \frac{p(d|M_i, \vtheta_i) p(M_i, \vtheta_i)}{p(d)}
+p(M_i|d) = \int d\vtheta_i \frac{\ilya{L}(d|M_i, \vtheta_i) \ilya{p(\vtheta_i|M_i) p(M_i)}}{p(d)}
 \approx \frac{N_i}{N},
 %
 \ee
@@ -410,7 +414,8 @@ necessary for efficient mixing between models, jumps should be
 preferentially proposed into regions with a high posterior.  However,
 because the algorithm is Markovian, it has no past memory, so a jump
 proposed into a model from outside can not access information from
-earlier in the chain which may identify a posterior peak.
+earlier in the chain which may identify a posterior peak. \ilya{(It is possible to overcome this constraint
+by storing a union of $\{\vtheta_i\}$ as the MCMC state vector, with the likelihood a function only of $\vtheta_i$ that correspond to the current $M_i$.  In this case, intermodel jump proposals would change only $M_i$.  However, if the chain finds a high-likelihood region in one model space faster than in another, a jump to the other model will take a very long time to be accepted -- again rendering RJMCMC inefficient.)}
 
 The way to solve this problem is to identify a good jump proposal
 distribution in advance, by exploiting information from single-model
@@ -424,7 +429,7 @@ $p(\vtheta_i|M_i,d)$, and single-model MCMCs already represent samples
 from these posterior PDFs.  However, the samples are discrete, and a
 jump proposal must be continuous.  Therefore, the output of each
 single-model MCMC must be interpolated to construct the desired jump
-proposal.  The novel strategy we propose for efficiently interpolating
+proposal.  The strategy we propose for efficiently interpolating
 a discretely sampled PDF is described in the next section.
 
 \section{kD Trees and Interpolation}
@@ -798,5 +803,6 @@ support from a Northwestern University Summer Undergraduate Research Grant.
 \section*{References}
 
 \bibliography{paper}
+%\bibliographystyle{unsrt}
 
 \end{document}
