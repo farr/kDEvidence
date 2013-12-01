@@ -362,7 +362,7 @@ in the parameter space.  Because jumps are frequently local, we will
 generally want to ignore the early points in a finite-size chain to
 avoid biases in the recovered posterior PDF due to the choice of the
 initial location.  The points thus discarded are referred to as
-``burn-in'' points. \ilya{[Up to this paragraph, we mostly use "samples", not "samples"; for the rest of the paper, we mostly use "points", with occasional sliding back to "samples".  I don't have a preference, but it might be better to use uniform terminology.]}
+``burn-in'' points. \ilya{[Up to this paragraph, we mostly use "samples", not "points"; for the rest of the paper, we mostly use "points", with occasional sliding back to "samples".  I don't have a preference, but it might be better to use uniform terminology.]}
 
 \subsection{RJMCMC}\label{RJMCMC}
 
@@ -713,7 +713,7 @@ to accumulate more points into the kD tree as the MCMC explores more
 of the parameter space.  \ilya{[See above -- it's not clear what exactly we are doing here in general.]}
 Because this introduces a dependence on the
 previous states of the MCMC, the jump proposal is no longer
-Markovian.  However, it remains \emph{asymptotically} Markovian \ilya{[And being asymptotically Markovian (whatever that actually means -- at least a reference? -- is provably sufficient to guarantee that we sample from the equilibrium distribution even though we nominally violate detailed balance? (again, a reference?)]} , which
+Markovian.  However, it remains \emph{asymptotically} Markovian \ilya{[And being asymptotically Markovian (whatever that actually means -- at least a reference?) -- is provably sufficient to guarantee that we sample from the equilibrium distribution even though we nominally violate detailed balance? (again, a reference?)]} , which
 ensures that the equilibrium distribution of the MCMC is correct.  To
 efficiently insert points into the tree as the chain accumulates them,
 the algorithm from Section \ref{sec:kDTree} must be modified:
@@ -789,7 +789,7 @@ selecting the best model for the observed distribution of black-hole
 X-ray binary \ilya{masses}, as described in \cite{Farr2010}.  In addition to
 model comparison, the PDF interpolation described here can be useful
 in multi-step MCMCs to \sout{improve sampling efficiency by selecting
-better jump proposal distributions} \ilya{propose jumps that can sample the parameter space more efficiently} or to test MCMC convergence. \ilya{[What are multi-step MCMCs (first mention)?  How do you use interpolation to test convergence?  You can't just introduce new ideas or new terminology in the penultimate paragraph of the paper with zero explanation.]}
+better jump proposal distributions} \ilya{propose jumps that can sample the parameter space more efficiently} or to test MCMC convergence. \ilya{[What are multi-step MCMCs (first mention)?  How do you use interpolation to test convergence?  I think it's bad form to introduce new ideas or new terminology in the penultimate paragraph of the paper with zero explanation.]}
 
 We have made our implementation of the technique described in this
 paper publicly available online at
@@ -805,7 +805,7 @@ We are grateful to Neil Cornish for interesting discussions.  IM
 acknowledges support from the NSF Astronomy and Astrophysics
 Postdoctoral Fellowship, award AST-0901985.  WF acknowledges support
 from NSF grant AST0908930 and NASA grant NNX09AJ56G. DS acknowledges
-support from a Northwestern University Summer Undergraduate Research Grant.
+support from a Northwestern University Summer Undergraduate Research Grant.  \ilya{This work has been partially supported by the UK Science and Technology Facilities Council.}
 
 \section*{References}
 
