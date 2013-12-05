@@ -21,6 +21,7 @@
 
 \newcommand{\ilya}[1]{{\color{red} \bf #1}}
 \newcommand{\will}[1]{{\color{blue} \bf Will: #1}}
+\newcommand{\dan}[1]{{\color{magenta} \bf #1}}
 
 \newcommand{\order}[1]{\mathcal{O}\left( #1 \right)}
 
@@ -67,7 +68,7 @@
   University, Columbus OH USA}
 
 
-\eads{\mailto{w.farr@bham.ac.uk}, \mailto{imandel@star.sr.bham.ac.uk} \mailto{dan.stevens@u.northwestern.edu}}
+\eads{\mailto{w.farr@bham.ac.uk}, \mailto{imandel@star.sr.bham.ac.uk} \mailto{stevens@astronomy.ohio-state.edu}}
 
 \begin{abstract}
   Selection among alternative theoretical models given an observed
@@ -199,7 +200,7 @@ from N-body positions and momenta in \cite{Ascasibar2005}.  The
 kD-tree interpolation is effective in parameter spaces of modest
 dimensionality, and is quite space-efficient, requiring $\order{N}$
 storage space and $\order{\log N}$ time to produce each proposed jump,
-where $N$ is the number of single-model MCMC samples used to construct
+where $N$ is the number of single-model MCMC \dan{(i.e. an MCMC over a parameter space of only one model)} samples used to construct
 the interpolation.
 
 The structure of this paper is as follows.  In Section
@@ -420,9 +421,9 @@ by storing a union of $\{\vtheta_i\}$ as the MCMC state vector, with the likelih
 The way to solve this problem is to identify a good jump proposal
 distribution in advance, by exploiting information from single-model
 MCMCs to generate efficient jump proposal distributions for our
-reversible jump MCMC.  (Single-model MCMCs can take small local jumps
+reversible jump MCMC (Single-model MCMCs can take small local jumps
 within their model, meaning that they are much less likely than an
-RJMCMC to lose a high-posterior mode once it has been located.)  The
+RJMCMC to lose a high-posterior mode once it has been located).  The
 ideal jump proposal distribution for the parameters within a model
 would consist of the posterior PDF for those parameters,
 $p(\vtheta_i|M_i,d)$, and single-model MCMCs already represent samples
@@ -644,31 +645,21 @@ In the model selection example from Section \ref{sec:efficiency}, the
 models have two-dimensional parameter spaces; in \cite{Farr2010} the
 highest-dimensional model had five dimensions.  As the number of
 dimensions increases the interpolation becomes more difficult for two
-reasons.  First, the number of sample points required for a given
+reasons.  First, the number of samples required for a given
 number of subdivisions in each dimension grows exponentially with
-dimension \ilya{number}, so for reasonable numbers of points a high-dimensional kD
-tree will have few subdivisions along each dimension.  Second, as
+the number of dimensions; hence, for a reasonable number of samples, a high-dimensional kD tree will have few subdivisions along each dimension. \dan{cleaned the syntax up a little in the preceding.} Second, as
 the dimensionality increases the volume ``at the \ilya{edges /} corners'' of each kD
 tree box becomes more significant; this problem is even more
 pronounced when the distribution of points does not align with the
 coordinate axes along which the tree subdivides.  In this section, we
-discuss practical solutions to this issue in the context of a
-single-model MCMC, concluding with an example of a successful
-application to gravitational-wave parameter estimation.
+discuss practical solutions to this issue, \dan{illustrating our solutions with a single-model MCMC. We conclude with an example of a successful
+application to gravitational-wave parameter estimation.}
 
-\ilya{[There is at least one paragraph missing here.  What's this "single-model MCMC" and why does it require PDF interpolation?  Are you running several MCMCs in succession as increasingly good approximations to the desired posterior?  Are you using higher-temperature chains to provide a jump proposal guess for lower temperatures?   More details needed.]}
+\ilya{[There is at least one paragraph missing here.  What's this "single-model MCMC" and why does it require PDF interpolation?  Are you running several MCMCs in succession as increasingly good approximations to the desired posterior?  Are you using higher-temperature chains to provide a jump proposal guess for lower temperatures?   More details needed.]} \dan{[I added a brief explanation of a single-model MCMC at its earliest mention in the introduction. Discussion of the single-model MCMC and the application of our kD-interpolation proposal seems like it would be better discussed after we introduce our proposal, no? Will, do you remember how we obtained the original samples that we fed into the tree?]}
 
-To address the arbitrary orientation of points, \ilya{[Points don't have an orientation -- they are points!  Did you mean something like "To address significant covariance between samples"?]} 
- the modified jump
-proposal does not descend to the leaf-nodes of the tree, but instead
-stops descending whenever the number of points in the box falls below
-a threshold, $\Nbox$. \ilya{[Is $\Nbox$ the threshold, or the actual number of points in the box -- it's defined to be the latter below \Eref{modforward}?]}  We then find the principal axes of the points
-contained in this box and draw from a modified box which is aligned
-with these axes and whose center is the mean of the points contained
-within the rectangular box. \ilya{[Is the box drawn so that all $\Nbox$ samples fall inside it?  I think so, but it should be stated explicitly.]}  The new point \ilya{[The proposed jump?  Maybe this would be a good distinction between sample and point -- use point for proposed jumps and samples for the PDF samples being interpolated; if this was done consistently, this would be more clear...]} is chosen uniformly from
-within the bounds of the modified box, subject to the restriction that
-it also lie within the original, coordinate-aligned box.  Figure
-\ref{fig:PCC} illustrates this two-box method.
+\dan{A naive jump proposal based on the kD tree structure would select one sample stored in the tree at random and perform the binary tree search given in Section \ref{sec:kDTree} to find that sample's neighborhood. A new point is then proposed uniformly from within this box. A better proposal however, would account for covariances between parameters in the parameter space; the naive proposal mentioned above, drawing uniformly from within a box, would yield a low acceptance ratio if parameters are heavily correlated. To address significant covariance between samples, the modified jump proposal does not descend to the leaf-nodes of the tree, but instead stops descending whenever the number of samples in the current box, $N_{box}$, falls below some threshold, $N_{crit}$. We then find the principal axes of the samples
+contained in this box by calculating the eigenvectors of the covariance matrix of these samples. We use these eignevectors to draw a new box. This box -- henceforth called a covariance cell -- contains all $N_{box}$ samples from the kD tree box, is centered on the mean of these samples, and has edges that are aligned with the principal axes. Furthermore, this box is drawn around the samples as tightly as possible; in other words, for each edge, there exists a point in the covariance cell that lies along that edge. Figure
+\ref{fig:PCC} illustrates these two boxes.}
 
 \begin{figure}
   \includegraphics[width=0.8\columnwidth]{PCC}
@@ -679,43 +670,42 @@ it also lie within the original, coordinate-aligned box.  Figure
     modified kd-interpolated jump proposal draws a point. }
 \end{figure}
 
-The forward jump probability for this jump proposal is given by
+\dan{The jump proposal chooses a stored sample at random and finds the largest kD tree box containing it and fewer than $N_{crit}$ total samples. It the draws the covariance cell and proposes a new set of parameters uniformly from the intersection of the covariance cell with the original kD tree box.}
+The jump probability for this jump proposal is given by
 %
 \bel{modforward} P(\vtheta_i \rightarrow \vtheta_{i+1}) =
-\frac{\Nbox}{N \left(V \cap \Vbox \right)} , \ee
+\frac{\Nbox}{N V} , \ee
 %
-where N is the total number of points in the kD-tree, $\Nbox$ is the
-number of points in the box containing $\vtheta_{i+1}$, $V$ is the
-volume of the original box containing $\vtheta_{i+1}$ and $\Vbox$ is
-the volume of the principal-component \ilya{[First time that "principal-component" is used to identify the diagonal sub-box...]} box containing $\vtheta_{i+1}$.
-
-The backward jump probability is computed in a similar fashion by
-finding the principal-component box that would contain the current set
-of parameters: \ilya{[Probably not necessary -- we don't explicitly provide backward jump proposals in earlier sections]}
-%
-\bel{modbackward} P(\vtheta_{i+1} \rightarrow \vtheta_{i}) =
-\frac{\Nbox'}{N\left(V' \cap \Vbox'\right)} , \ee
-%
-where $\Nbox'$ is the number of points in the original box containing
-$\vtheta_i$, $V'$ is the volume of the kD box containing $\vtheta_i$,
-and $\Vbox'$ is the volume of the principal-axes box containing
-$\vtheta_i$.  Note, however, that the current parameters may lie in a
-region of the kD box that does not intersect the principal axes box;
-in this case, the backward jump probability is zero, and the algorithm
-rejects the proposed step.  When used as the only jump proposal for an
-RJMCMC, it is important that the kD tree proposal be capable of
+\dan{where N is the total number of points in the kD-tree, $V$ is the
+volume of the intersection between the kD tree box and the correlation cell containing $\vtheta_{i+1}$. When used as the only jump proposal for an
+RJMCMC, it is important that this proposal be capable of
 proposing points in all allowed regions of parameter space; on the
-other hand, when the kD proposal is used as one of several proposals
-in the context of an MCMC, this is no longer a requirement.
+other hand, when the kD proposal is used in a suite of other jump proposals, this is no longer a requirement.}
 
-It can also be advantageous, particularly in high-dimensional spaces,
-to accumulate more points into the kD tree as the MCMC explores more
-of the parameter space.  \ilya{[See above -- it's not clear what exactly we are doing here in general.]}
-Because this introduces a dependence on the
-previous states of the MCMC, the jump proposal is no longer
-Markovian.  However, it remains \emph{asymptotically} Markovian \ilya{[And being asymptotically Markovian (whatever that actually means -- at least a reference?) -- is provably sufficient to guarantee that we sample from the equilibrium distribution even though we nominally violate detailed balance? (again, a reference?)]} , which
-ensures that the equilibrium distribution of the MCMC is correct.  To
-efficiently insert points into the tree as the chain accumulates them,
+%The backward jump probability is computed in a similar fashion by
+%finding the principal-component box that would contain the current set
+%of parameters: \ilya{[Probably not necessary -- we don't explicitly provide backward jump proposals in earlier sections]}
+%
+%\bel{modbackward} P(\vtheta_{i+1} \rightarrow \vtheta_{i}) =
+%\frac{\Nbox'}{N\left(V' \cap \Vbox'\right)} , \ee
+%
+%where $\Nbox'$ is the number of points in the original box containing
+%$\vtheta_i$, $V'$ is the volume of the kD box containing $\vtheta_i$,
+%and $\Vbox'$ is the volume of the principal-axes box containing
+%$\vtheta_i$.  Note, however, that the current parameters may lie in a
+%region of the kD box that does not intersect the principal axes box;
+%in this case, the backward jump probability is zero, and the algorithm
+%rejects the proposed step.
+
+
+
+\dan{This technique trivially violates detailed balance since the jump proposal distribution depends on the past history (the number of samples in the kD tree box and in the whole tree). One way to address this problem requires continuously accumulating samples into the kD tree as the MCMC explores more
+of the parameter space. As the number of samples drawn from the posterior PDF increases, the neighborhoods around each sample decrease with increasing sample density and the calculated covariances between samples in the kD tree better approximate the true covariances between parameters in the equilibrium posterior PDF. ence, for large $N$, the change in $P(\vtheta^{(j)} \rightarrow \vtheta^{(j+1)})$ approaches zero and the jump proposal does a progressively better job of sampling the equilibrium posterior [someone confirm or deny!]}  \ilya{[See above -- it's not clear what exactly we are doing here in general.]}
+%Because this introduces a dependence on the
+%previous states of the MCMC, the jump proposal is no longer
+%Markovian.  However, it remains \emph{asymptotically} Markovian \ilya{[And being asymptotically Markovian (whatever that actually means -- at least a reference?) -- is provably sufficient to guarantee that we sample from the equilibrium distribution even though we nominally violate detailed balance? (again, a reference?)]} , which
+%ensures that the equilibrium distribution of the MCMC is correct.
+To efficiently insert points into the tree as the chain accumulates them,
 the algorithm from Section \ref{sec:kDTree} must be modified:
 \begin{enumerate}
 \item Instead of partitioning the point set at its median, we now
@@ -732,9 +722,9 @@ the algorithm from Section \ref{sec:kDTree} must be modified:
   or zero points.
 \end{enumerate}
 Insertion of a point is $\order{\log N}$, since it involves a constant
-amount of work per tree level, and there are $\log N$ tree levels.  \ilya{[No -- the number of tree levels can be arbitrarily large if the original samples are clustered into a very small region of the prior volume...]}
+amount of work per tree level, and there are $\log N$ tree levels.  \ilya{[No -- the number of tree levels can be arbitrarily large if the original samples are clustered into a very small region of the prior volume...]} \dan{[Is this true? Couldn't it be arbitrarily small, depending on how far into the tree you want to burrow (i.e. depending on $N_{crit}$)?]}
 Neighborhood lookup proceeds as before, and is therefore also
-$\order{\log N}$.  \ilya{[Perhaps $\order{\log N + \Nbox}$, since must recompile the inner bounding box every time -- and, depending on problem, $\Nbox$ could be $\gg \log N$?]}
+$\order{\log N}$.  \ilya{[Perhaps $\order{\log N + \Nbox}$, since must recompile the inner bounding box every time -- and, depending on problem, $\Nbox$ could be $\gg \log N$?]} \dan{[Need only recompute the covariance cell if a new point was accepted into the corresponding kD tree cell between calls to that kD tree cell. I'm not sure how that would factor in here, but I feel like it should.] }
 
 We have implemented this modified kD tree proposal as one of many jump
 proposals in the \texttt{LALInferenceMCMC} sampler
@@ -748,9 +738,10 @@ signal has a nine-dimensional parameter space, and the posterior often
 includes near-degeneracies and multiple modes that make convergence of
 the MCMC chain very slow with traditional proposals.  Figure
 \ref{fig:accratio} shows the acceptance ratio for the kD-tree jump
-proposal in such a simulation.  In spite of the very low acceptance
+proposal in such a simulation.  \dan{For this case, the kD-tree jump proposal is one of several jump proposals used during the MCMC, and the kD tree itself is updated with accepted samples whenever its jump proposal is called.}
+In spite of the very low acceptance
 rate of the proposal, applying the kD-tree proposal to one out of
-twenty proposed jumps improved the convergence time of the simulation
+\dan{20} proposed jumps improved the convergence time of the simulation
 by a factor of two compared to the standard suite of proposals because
 it is particularly efficient at producing ``mode-hopping'' jumps,
 which are difficult to produce with the other proposals in
@@ -761,12 +752,12 @@ which are difficult to produce with the other proposals in
     \includegraphics[width=0.8\columnwidth]{linearlog3}
   \end{center}
   \caption{\label{fig:accratio} The cumulative parameter acceptance
-    ratio for the modified kD-interpolated jump proposal used in the
+    ratio for the modified kD-\dan{tree}jump proposal used in the
     \texttt{LALInferenceMCMC} code as a function of the number of
     steps (in hundreds). In spite of the small acceptance ratio, the
-    kD tree proposal, applied to one in twenty proposed jumps,
+    kD tree proposal, applied to one in \dan{20} proposed jumps,
     improved the convergence time of the sampler by a factor of two
-    compared to using only the standard suite of proposals. \ilya{[I see structure in this figure (a high acceptance probability, followed by a dip, followed by an asymptote).  Is this a fluke, or do you always see this -- and, if so, why?  BTW, what's the autocorrelation length (just to give me a sense of scale, so I am not reading too much into meaningless fluctuations within an AC length)?]}}
+    compared to using only the standard suite of proposals. \dan{[Taking a leap here, someone please confirm/deny/add qualifiers] The initial decrease in acceptances arises from insufficient population of the kD tree with too few samples, while the leveling-off later in the MCMC indicates convergence.} \ilya{[I see structure in this figure (a high acceptance probability, followed by a dip, followed by an asymptote).  Is this a fluke, or do you always see this -- and, if so, why?  BTW, what's the autocorrelation length (just to give me a sense of scale, so I am not reading too much into meaningless fluctuations within an AC length)?]} \dan{[Don't recall the autocorrelation length. Will?]}}
 \end{figure}
 
 \section{Conclusion}
