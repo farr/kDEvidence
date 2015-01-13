@@ -76,9 +76,7 @@
   astronomy.  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an
   extremely powerful technique for performing Bayesian model
   selection, but it suffers from a fundamental difficulty: it requires
-  jumps between model parameter spaces, but cannot retain a memory of
-  the favored locations in more than one parameter space at a time. \ilya{[Not quite true -- see 2.3 -- maybe we can find a better way of saying this in the abstract that doesn't require caveats?]}
-  Thus, a naive jump between parameter spaces is unlikely to be
+  jumps between model parameter spaces, but cannot efficiently explore both parameter spaces at once.  Thus, a naive jump between parameter spaces is unlikely to be
   accepted in the MCMC algorithm and convergence is correspondingly
   slow.  Here we demonstrate an interpolation technique that uses
   samples from single-model MCMCs to propose inter-model jumps from an
@@ -106,7 +104,7 @@
 Selection among alternative theoretical models given an observed data
 set is an important challenge in many areas of physics and astronomy.
 In a Bayesian context, model selection involves computing the evidence
-for \sout{each model given the data} \ilya{the data given each model}.  The model evidence is an integral of
+for the data given each model.  The model evidence is an integral of
 the unnormalized posterior probability distribution over the model
 parameter space, representing the probability of obtaining the data
 set within that model.  Models with larger evidence are preferred; the
@@ -138,8 +136,7 @@ implementations with parallel tempering \cite{EarlDeem:2005} allow
 for evidence computation via thermodynamic integration, but these can
 be computationally costly.
 
-\cite{Weinberg2009} \ilya{[Not ideal reference style, but without citet, I have no idea how to fix this ;) ]}
-gives a method for directly computing
+\cite{Weinberg2009} gives a method for directly computing
 the evidence integral from existing MCMC samples by using a kD-tree
 data structure to decompose a parameter space into boxes containing
 the MCMC sample points.  The integral is approximated as a sum over
@@ -167,7 +164,8 @@ time an RJMCMC transitions between models, the information about the
 choices of parameter values in the previous model is lost; subsequent
 jumps into that model must ``start fresh,'' and are correspondingly
 unlikely to be accepted, delaying convergence of the RJMCMC sample
-chain \ilya{(see \Sref{RJMCMC} for a caveat)}.  \cite{Littenberg2009} addressed this issue by proposing a new
+chain (see \Sref{RJMCMC} for a caveat).  
+\cite{Littenberg2009} addressed this issue by proposing a new
 method for producing inter-model jumps in an RJMCMC that relies on
 interpolating single-model posterior distributions using a box
 decomposition of parameter space.
@@ -200,8 +198,7 @@ from N-body positions and momenta in \cite{Ascasibar2005}.  The
 kD-tree interpolation is effective in parameter spaces of modest
 dimensionality, and is quite space-efficient, requiring $\order{N}$
 storage space and $\order{\log N}$ time to produce each proposed jump,
-where $N$ is the number of single-model MCMC \dan{(i.e. an MCMC over a parameter space of only one model)} samples used to construct
-the interpolation.
+where $N$ is the number of samples in an MCMC over the parameter space of one model (`single-model MCMC') used to construct the interpolation.
 
 The structure of this paper is as follows.  In Section
 \ref{sec:reversible-jump} we introduce in more detail the concept of a
@@ -320,7 +317,7 @@ Metropolis-Hastings algorithm, first proposed in
 \item Compute the probability of accepting the proposed jump as
   \bel{eq:p-accept} 
 p_{\textnormal{accept}} \equiv \min\Bigl(1,
-\frac{p(\vtheta^p|d\ilya{,M})}{p(\vtheta^{(j)}|d\ilya{,M})} \frac{Q(\vtheta^p \to
+\frac{p(\vtheta^p|d, M)}{p(\vtheta^{(j)}|d, M)} \frac{Q(\vtheta^p \to
   \vtheta^{(j)})}{Q(\vtheta^{(j)} \to \vtheta^p)} \Bigr).  
 \ee
 \item Pick a uniform random number $\alpha \in [0,1]$.  If $\alpha<
@@ -360,10 +357,10 @@ relative sizes of the modes in the PDF.
 Finally, we note that, in practice, the randomly chosen initial
 starting point of the MCMC may be in a particularly unlikely location
 in the parameter space.  Because jumps are frequently local, we will
-generally want to ignore the early points in a finite-size chain to
+generally want to ignore the early samples in a finite-size chain to
 avoid biases in the recovered posterior PDF due to the choice of the
-initial location.  The points thus discarded are referred to as
-``burn-in'' points. \ilya{[Up to this paragraph, we mostly use "samples", not "points"; for the rest of the paper, we mostly use "points", with occasional sliding back to "samples".  I don't have a preference, but it might be better to use uniform terminology.]}
+initial location.  The samples thus discarded are referred to as
+``burn-in'' samples. 
 
 \subsection{RJMCMC}\label{RJMCMC}
 
@@ -390,14 +387,14 @@ MCMC in the ``super-model'' parameter space just like a regular MCMC;
 we propose jumps to different parameters within a model (intramodel
 jumps) and jumps to a different model with different parameters
 (intermodel jumps).  The resulting chain samples from the posterior
-$p(M_i,\ilya{\{\vtheta_i\}}|d)$.  As in a usual MCMC, the PDF on the model as a
+$p(M_i, \{\vtheta_i\}|d)$.  As in a usual MCMC, the PDF on the model as a
 parameter, with other parameters ignored, is obtained by marginalizing
 over the remaining parameters.  The posterior probability of a model
 is proportional to the number of counts
 %
 \be
 %
-p(M_i|d) = \int d\vtheta_i \frac{\ilya{L}(d|M_i, \vtheta_i) \ilya{p(\vtheta_i|M_i) p(M_i)}}{p(d)}
+p(M_i|d) = \int d\vtheta_i \frac{L(d|M_i, \vtheta_i) p(\vtheta_i|M_i) p(M_i)}{p(d)}
 \approx \frac{N_i}{N},
 %
 \ee
@@ -415,8 +412,7 @@ necessary for efficient mixing between models, jumps should be
 preferentially proposed into regions with a high posterior.  However,
 because the algorithm is Markovian, it has no past memory, so a jump
 proposed into a model from outside can not access information from
-earlier in the chain which may identify a posterior peak. \ilya{(It is possible to overcome this constraint
-by storing a union of $\{\vtheta_i\}$ as the MCMC state vector, with the likelihood a function only of $\vtheta_i$ that correspond to the current $M_i$.  In this case, intermodel jump proposals would change only $M_i$.  However, if the chain finds a high-likelihood region in one model space faster than in another, a jump to the other model will take a very long time to be accepted -- again rendering RJMCMC inefficient.)}
+earlier in the chain which may identify a posterior peak.  It is, in principle, possible to overcome this constraint by storing a union of $\{\vtheta_i\}$ as the MCMC state vector, with the likelihood a function only of parameters $\vtheta_i$ that correspond to the current model $M_i$.  In this case, intermodel jump proposals would change only the model $M_i$.  However, if the chain finds a high-likelihood region in one model space faster than in another, a jump to the other model will take a very long time to be accepted -- again rendering RJMCMC inefficient.
 
 The way to solve this problem is to identify a good jump proposal
 distribution in advance, by exploiting information from single-model
@@ -436,32 +432,29 @@ a discretely sampled PDF is described in the next section.
 \section{kD Trees and Interpolation}
 \label{sec:kDTree}
 
-%\ilya{I think this section could just be phrased in terms of interpolation rather than jump proposal distributions; i.e., "the problem of finding the local density" instead of "the problem of drawing a proposed jump", etc.}
-
 The problem of drawing a proposed jump from an interpolation of
-single-model MCMC points can be thought of as the problem of assigning
-a local ``neighborhood'' to each point in the chain of MCMC samples.
+single-model MCMC samples can be thought of as the problem of assigning
+a local ``neighborhood'' to each sample in the MCMC chain.
 We choose these neighborhoods to be non-overlapping and to fill the parameter
 space.  The size of a
-neighborhood is inversely proportional to the local point density.
+neighborhood is inversely proportional to the local sample density.
 The proposed jumps are drawn from a piecewise-constant (constant on
 each neighborhood) interpolation of the PDF.  
-To draw a proposed jump, we select a point uniformly from the
+To draw a proposed jump, we select a sample uniformly from the
 MCMC samples, find its associated neighborhood, and then draw the
-proposed jump uniformly from the neighborhood.  Since the MCMC points
+proposed jump uniformly from the neighborhood.  Since the MCMC samples
 are distributed according to the posterior PDF for the single model,
 this procedure produces proposed jumps that are approximately
 distributed according to the posterior PDF.  
-\ilya{[I moved sentences around to improve flow without actually changing the text -- hope that's OK.]}
 
 There are various
 techniques that could be used to construct the set of neighborhoods
-associated with each point.
+associated with each sample.
 \cite{Littenberg2009} decompose the parameter space into
 constant-volume ``bricks'' whose size is set by the typical size of
 the peaks of the PDF.  Each sample is associated with the brick that
 contains it, and the probability of proposing a jump into a particular brick is thus proportional to the
-number of samples within that brick.  Additionally, an extra uniform jump proposal is added to allow for jumps into bricks that do not contain any points, so that the jump 
+number of samples within that brick.  Additionally, an extra uniform jump proposal is added to allow for jumps into bricks that do not contain any samples, so that the jump 
 proposal covers the entire model parameter space.  
 However, the bricks in this algorithm do not adapt to the local
 structure of the PDF.  One must either use small bricks to capture the
@@ -490,34 +483,34 @@ adaptive than the boxes of \cite{Littenberg2009}, and more
 efficient in high-dimensional spaces than the Voronoi decomposition.
 
 A kD-tree is a binary, space-partitioning tree.  To partition a set of
-points into a kD-tree, begin by placing them in a rectangular box that
+samples into a kD-tree, begin by placing them in a rectangular box that
 contains all of parameter space.  Then proceed recursively%
 \footnote{The kD-tree data structure defined here places box boundaries
-  between the points.  An alternate definition common in the
-  literature places box boundaries on the median point, but such a
+  between the samples.  An alternate definition common in the
+  literature places box boundaries on the median sample, but such a
   definition is inconvenient for our purposes.}: %
 \begin{enumerate}
-\item If the given box contains exactly one point, stop; this is a
+\item If the given box contains exactly one sample, stop; this is a
   leaf of the tree.  Otherwise:
-\item Choose a dimension along which to divide the points.  Divide the
-  points in half along this dimension (or nearly in half, if the
-  number of points is odd), forming two sub-boxes.  The ``left''
-  sub-box contains the half (or nearly half) of the points that have
+\item Choose a dimension along which to divide the samples.  Divide the
+  samples in half along this dimension (or nearly in half, if the
+  number of samples is odd), forming two sub-boxes.  The ``left''
+  sub-box contains the half (or nearly half) of the samples that have
   small coordinates along the chosen dimension; the ``right'' sub-box
-  contains the half (or nearly half) of the points that have large
+  contains the half (or nearly half) of the samples that have large
   coordinates along the chosen dimension.
 \item Return to Step 1 with each of the sub-boxes, storing the
   resulting trees as sub-trees of the current box.
 \end{enumerate}
 The key algorithmic step in the production of a kD-tree is finding the
-median point along a given dimension in order to divide the points in
-half in Step 2.  For $n$ points, this can be accomplished in
+median sample along a given dimension in order to divide the samples in
+half in Step 2.  For $n$ samples, this can be accomplished in
 $\order{n}$ time (see, e.g., \cite{Press2007}).  If there are $N$
-points in total, there are $\order{\log N}$ levels in the tree; at
-each level, $\order{N}$ points must be processed once in the
+samples in total, there are $\order{\log N}$ levels in the tree; at
+each level, $\order{N}$ samples must be processed once in the
 median-finding algorithm.  Tree construction thus costs $\order{N \log
   N}$ in time, and the tree consumes $\order{N}$ space.  As an
-illustration, box boundaries for a kD-tree constructed around a point
+illustration, box boundaries for a kD-tree constructed around a sample
 set that is normally distributed around the origin in two dimensions
 are shown in Figure \ref{fig:kD-tree}.
 
@@ -526,11 +519,11 @@ are shown in Figure \ref{fig:kD-tree}.
     \includegraphics[width=0.8\columnwidth]{Figure1_kdtree}
   \end{center}
   \caption{\label{fig:kD-tree} The neighborhoods from a kD-tree
-    constructed around a set of points that are normally distributed
-    about the origin in two dimensions.  As the points become denser
+    constructed around a set of samples that are normally distributed
+    about the origin in two dimensions.  As the samples become denser
     around the origin, the typical neighborhood gets smaller.  The
     interpolated PDF within a box of volume $V_i$ is $1/(N V_i)$,
-    where $N$ is the total number of points (which is also the number
+    where $N$ is the total number of samples (which is also the number
     of boxes).}
 \end{figure}
 
@@ -579,7 +572,7 @@ parameters of the underlying distribution is approximately 10\%, so we
 expect the posterior probabilities in the $(\mu,\sigma)$ and
 $(\alpha,\beta)$ spaces to occupy only a few percent of the prior
 volume.  The Cauchy distribution is much broader than the Gaussian (it
-has no finite moments), so with \ilya{equal} model priors, the posterior
+has no finite moments), so with equal model priors, the posterior
 probability for the Gaussian model over the Cauchy model is extremely
 large:
 %
@@ -605,13 +598,13 @@ described above to propose inter-model jumps in an RJMCMC.  The
 acceptance rate of inter-model jumps is approximately 0.8.  To explore
 how the efficiency of the method degrades as the interpolation becomes
 less accurate, we artificially truncated the kD tree with higher and
-higher numbers of points in each box (this can be accomplished during
+higher numbers of samples in each box (this can be accomplished during
 the neighborhood search phase by stopping the search for a box when
-one is found containing the desired number of points).  For each
+one is found containing the desired number of samples).  For each
 truncation choice, we performed an RJMCMC with the resulting
 interpolated jump proposal.  The acceptance rate is plotted against
-the number of single-model MCMC points per box (kD-tree leaf) in
-Figure \ref{fig:acceptRate}.  The more points in each leaf of the tree
+the number of single-model MCMC samples per box (kD-tree leaf) in
+Figure \ref{fig:acceptRate}.  The more samples in each leaf of the tree
 when the search is truncated, the lower the acceptance probability;
 when points are drawn from the top level of the tree, the acceptance
 probability asymptotes to the naive draw from the prior ($\sim 5\%$).
@@ -620,9 +613,9 @@ probability asymptotes to the naive draw from the prior ($\sim 5\%$).
   \begin{center}
     \includegraphics[width=0.8\columnwidth]{Figure2_acceptRate}
   \end{center}
-  \caption{\label{fig:acceptRate} The inter-model \ilya{jump proposal} acceptance rate
-    versus the number of points per box when the kD-tree neighborhood
-    search is truncated.  As the number of points per box increases,
+  \caption{\label{fig:acceptRate} The inter-model jump acceptance rate
+    versus the number of samples per box when the kD-tree neighborhood
+    search is truncated.  As the number of samples per box increases,
     and the interpolation becomes less accurate, the acceptance rate
     falls, asymptoting to the rate for naive draws from the uniform
     prior (about $5\%$ for this data set).}
@@ -650,7 +643,7 @@ number of subdivisions in each dimension grows exponentially with
 the number of dimensions; hence, for a reasonable number of samples, a high-dimensional kD tree will have few subdivisions along each dimension. \dan{cleaned the syntax up a little in the preceding.} Second, as
 the dimensionality increases the volume ``at the \ilya{edges /} corners'' of each kD
 tree box becomes more significant; this problem is even more
-pronounced when the distribution of points does not align with the
+pronounced when the distribution of samples does not align with the
 coordinate axes along which the tree subdivides.  In this section, we
 discuss practical solutions to this issue, \dan{illustrating our solutions with a single-model MCMC. We conclude with an example of a successful
 application to gravitational-wave parameter estimation.}
@@ -666,7 +659,7 @@ contained in this box by calculating the eigenvectors of the covariance matrix o
   \caption{\label{fig:PCC} A two-dimensional illustration of the two
     boxes involved in the modified kD proposal.  The larger box
     aligned with the axes is the normal kD-tree box containing the
-    given points, while the tighter box is the box from which the
+    given samples, while the tighter box is the box from which the
     modified kd-interpolated jump proposal draws a point. }
 \end{figure}
 
@@ -676,7 +669,7 @@ The jump probability for this jump proposal is given by
 \bel{modforward} P(\vtheta_i \rightarrow \vtheta_{i+1}) =
 \frac{\Nbox}{N V} , \ee
 %
-\dan{where N is the total number of points in the kD-tree, $V$ is the
+\dan{where N is the total number of samples in the kD-tree, $V$ is the
 volume of the intersection between the kD tree box and the correlation cell containing $\vtheta_{i+1}$. When used as the only jump proposal for an
 RJMCMC, it is important that this proposal be capable of
 proposing points in all allowed regions of parameter space; on the
@@ -705,26 +698,26 @@ of the parameter space. As the number of samples drawn from the posterior PDF in
 %previous states of the MCMC, the jump proposal is no longer
 %Markovian.  However, it remains \emph{asymptotically} Markovian \ilya{[And being asymptotically Markovian (whatever that actually means -- at least a reference?) -- is provably sufficient to guarantee that we sample from the equilibrium distribution even though we nominally violate detailed balance? (again, a reference?)]} , which
 %ensures that the equilibrium distribution of the MCMC is correct.
-To efficiently insert points into the tree as the chain accumulates them,
+To efficiently insert samples into the tree as the chain accumulates them,
 the algorithm from Section \ref{sec:kDTree} must be modified:
 \begin{enumerate}
-\item Instead of partitioning the point set at its median, we now
+\item Instead of partitioning the sample set at its median, we now
   partition the bounding box at its geometric center along a
   particular dimension, which cycles as we descend the tree levels.
-  Note that this allows for empty boxes if all the points cluster to
+  Note that this allows for empty boxes if all the samples cluster to
   one side of the domain.
-\item When inserting a point, we descend the tree to a leaf node,
-  which now can be either empty or contain one point.  If it is empty,
-  we insert the point at this node.  If it contains one point, we
-  subdivide the appropriate dimension, and place both points into the
+\item When inserting a sample, we descend the tree to a leaf node,
+  which now can be either empty or contain one sample.  If it is empty,
+  we insert the sample at this node.  If it contains one sample, we
+  subdivide the appropriate dimension, and place both samples into the
   two sub-boxes.  If both land in the same sub-box, we continue
   subdividing, until each box in the sub-sub-sub... tree contains one
-  or zero points.
+  or zero samples.
 \end{enumerate}
-Insertion of a point is $\order{\log N}$, since it involves a constant
+Insertion of a sample is $\order{\log N}$, since it involves a constant
 amount of work per tree level, and there are $\log N$ tree levels.  \ilya{[No -- the number of tree levels can be arbitrarily large if the original samples are clustered into a very small region of the prior volume...]} \dan{[Is this true? Couldn't it be arbitrarily small, depending on how far into the tree you want to burrow (i.e. depending on $N_{crit}$)?]}
 Neighborhood lookup proceeds as before, and is therefore also
-$\order{\log N}$.  \ilya{[Perhaps $\order{\log N + \Nbox}$, since must recompile the inner bounding box every time -- and, depending on problem, $\Nbox$ could be $\gg \log N$?]} \dan{[Need only recompute the covariance cell if a new point was accepted into the corresponding kD tree cell between calls to that kD tree cell. I'm not sure how that would factor in here, but I feel like it should.] }
+$\order{\log N}$.  \ilya{[Perhaps $\order{\log N + \Nbox}$, since must recompile the inner bounding box every time -- and, depending on problem, $\Nbox$ could be $\gg \log N$?]} \dan{[Need only recompute the covariance cell if a new sample was accepted into the corresponding kD tree cell between calls to that kD tree cell. I'm not sure how that would factor in here, but I feel like it should.] }
 
 We have implemented this modified kD tree proposal as one of many jump
 proposals in the \texttt{LALInferenceMCMC} sampler
@@ -796,7 +789,7 @@ We are grateful to Neil Cornish for interesting discussions.  IM
 acknowledges support from the NSF Astronomy and Astrophysics
 Postdoctoral Fellowship, award AST-0901985.  WF acknowledges support
 from NSF grant AST0908930 and NASA grant NNX09AJ56G. DS acknowledges
-support from a Northwestern University Summer Undergraduate Research Grant.  \ilya{This work has been partially supported by the UK Science and Technology Facilities Council.}
+support from a Northwestern University Summer Undergraduate Research Grant.  This work has been partially supported by the UK Science and Technology Facilities Council.
 
 \section*{References}
 
