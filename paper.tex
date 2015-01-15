@@ -1,4 +1,4 @@
-\documentclass{iopart}
+\documentclass{rsos}
 %\documentclass{article}
 
 \usepackage{hyperref}
@@ -53,22 +53,25 @@
 
 \date{\today}
 
-\author{W M Farr$^{1,3}$, I Mandel$^{2,3}$ and D Stevens$^{1,4}$}
+\author{W M Farr$^{1,3}$, I Mandel$^{2,3,4}$ and D Stevens$^{1,5}$}
 
-\address{$^1$ Center for Interdisciplinary Exploration and Research in
+\address{\small{$^1$ Center for Interdisciplinary Exploration and Research in
   Astrophysics (CIERA), Department of Physics and Astronomy,
-  Northwestern University, Evanston IL USA}
+  Northwestern University, Evanston IL USA\\
+$^2$ MIT Kavli Institute, Cambridge MA USA\\
+$^3$ School of Physics and Astronomy, University of
+  Birmingham, Birmingham UK\\
+$^4$ Monash Center for Astrophysics and School of Physics and Astronomy, Monash University, Clayton, VIC Australia\\
+$^5$ Department of Astronomy, The Ohio State
+  University, Columbus OH USA}}
 
-\address{$^2$ MIT Kavli Institute, Cambridge MA USA}
+\subject{Astrostatistics, Data Analysis, Markov chain Monte Carlo}
 
-\address{$^3$ School of Physics and Astronomy, University of
-  Birmingham, Birmingham UK}
+\keywords{MCMC, RJMCMC}
+%\eads{\mailto{w.farr@bham.ac.uk}, \mailto{imandel@star.sr.bham.ac.uk} \mailto{stevens@astronomy.ohio-state.edu}}
 
-\address{$^4$ Department of Astronomy, The Ohio State
-  University, Columbus OH USA}
-
-
-\eads{\mailto{w.farr@bham.ac.uk}, \mailto{imandel@star.sr.bham.ac.uk} \mailto{stevens@astronomy.ohio-state.edu}}
+\corres{Ilya Mandel\\
+\email{imandel@star.sr.bham.ac.uk}}
 
 \begin{abstract}
   Selection among alternative theoretical models given an observed
@@ -93,9 +96,9 @@
   method to be used in higher-dimensional spaces efficiently.
 \end{abstract}
 
-\pacs{02.70.Tt, 95.75.Pq, 07.05.Kf}
+%\pacs{02.70.Tt, 95.75.Pq, 07.05.Kf}
 
-\submitto{\CQG}
+%\submitto{\CQG}
 
 \maketitle
 
@@ -164,7 +167,7 @@ time an RJMCMC transitions between models, the information about the
 choices of parameter values in the previous model is lost; subsequent
 jumps into that model must ``start fresh,'' and are correspondingly
 unlikely to be accepted, delaying convergence of the RJMCMC sample
-chain (see \Sref{RJMCMC} for a caveat).  
+chain (see Section \ref{RJMCMC} for a caveat).  
 \cite{Littenberg2009} addressed this issue by proposing a new
 method for producing inter-model jumps in an RJMCMC that relies on
 interpolating single-model posterior distributions using a box
@@ -248,7 +251,7 @@ This implies that the evidence is equal to
 where $V_i$ is the parameter space volume in model $M_i$.  For model
 comparison, we are interested in the posterior probability of a
 particular model, $M_i$, given the data, $p(M_i|d)$.  Using Bayes'
-rule, we see that this involves the evidence \eref{evidence}:
+rule, we see that this involves the evidence, Eq.~(\ref{evidence}):
 \be
 p(M_i|d) = \frac{p(d|M_i) p(M_i)}{p(d)},
 \ee
@@ -261,7 +264,7 @@ p(d)=\sum_i p(d|M_i) p(M_i).
 When selecting among alternative models, we are interested in finding
 the model with the highest posterior probability $p(M_i|d)$.  However,
 attempts to directly compute the evidence by performing the
-integration in \eref{evidence} are generally very difficult in a
+integration in Eq.~(\ref{evidence}) are generally very difficult in a
 multi-dimensional, multi-modal parameter space when the likelihood has
 to be evaluated numerically.  In particular, a grid-based integral
 quickly becomes computationally unfeasible as the dimensionality of
@@ -784,9 +787,9 @@ We are grateful to Neil Cornish for interesting discussions.  IM
 acknowledges support from the NSF Astronomy and Astrophysics
 Postdoctoral Fellowship, award AST-0901985.  WF acknowledges support
 from NSF grant AST0908930 and NASA grant NNX09AJ56G. DS acknowledges
-support from a Northwestern University Summer Undergraduate Research Grant.  This work has been partially supported by the UK Science and Technology Facilities Council.
+support from a Northwestern University Summer Undergraduate Research Grant.  IM is grateful for the hospitality offered by Monash University and, particularly, Yuri Levin.  This work has been partially supported by the UK Science and Technology Facilities Council.
 
-\section*{References}
+\section*{}
 
 \bibliography{paper}
 %\bibliographystyle{unsrt}
