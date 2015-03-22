@@ -74,26 +74,7 @@ $^5$ Department of Astronomy, The Ohio State
 \email{imandel@star.sr.bham.ac.uk}}
 
 \begin{abstract}
-  Selection among alternative theoretical models given an observed
-  data set is an important challenge in many areas of physics and
-  astronomy.  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an
-  extremely powerful technique for performing Bayesian model
-  selection, but it suffers from a fundamental difficulty: it requires
-  jumps between model parameter spaces, but cannot efficiently explore both parameter spaces at once.  Thus, a naive jump between parameter spaces is unlikely to be
-  accepted in the MCMC algorithm and convergence is correspondingly
-  slow.  Here we demonstrate an interpolation technique that uses
-  samples from single-model MCMCs to propose inter-model jumps from an
-  approximation to the single-model posterior of the target parameter
-  space.  The interpolation technique, based on a kD-tree data
-  structure, is adaptive and efficient in modest dimensionality.  We
-  show that our technique leads to dramatically improved convergence
-  over naive jumps in an RJMCMC, and compare it to other proposals in
-  the literature to improve the convergence of RJMCMCs.  We also
-  demonstrate the use of the same interpolation technique as a way to
-  construct efficient ``global'' proposal distributions for
-  single-model MCMCs without prior knowledge of the structure of the
-  posterior distribution, and discuss improvements that permit the
-  method to be used in higher-dimensional spaces efficiently.
+Selection among alternative theoretical models given an observed data set is an important challenge in many areas of physics and astronomy.  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an extremely powerful technique for performing Bayesian model selection, but it suffers from a fundamental difficulty: it requires jumps between model parameter spaces, but cannot efficiently explore both parameter spaces at once.  Thus, a naive jump between parameter spaces is unlikely to be accepted in the MCMC algorithm and convergence is correspondingly slow.  Here we demonstrate an interpolation technique that uses samples from single-model MCMCs to propose inter-model jumps from an approximation to the single-model posterior of the target parameter space.  The interpolation technique, based on a kD-tree data structure, is adaptive and efficient in modest dimensionality.  We show that our technique leads to dramatically improved convergence over naive jumps in an RJMCMC, and compare it to other proposals in the literature to improve the convergence of RJMCMCs.  We also demonstrate the use of the same interpolation technique as a way to construct efficient ``global'' proposal distributions for single-model MCMCs without prior knowledge of the structure of the posterior distribution, and discuss improvements that permit the method to be used in higher-dimensional spaces efficiently.
 \end{abstract}
 
 %\pacs{02.70.Tt, 95.75.Pq, 07.05.Kf}
@@ -135,7 +116,7 @@ the evidence for a model from MCMC samples is to compute the
 harmonic-mean estimator, but this estimator of the evidence suffers
 from infinite variance
 \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  MCMC
-implementations with parallel tempering \cite{EarlDeem:2005} allow
+implementations with parallel tempering \cite{SwendsenWang:1986,EarlDeem:2005} allow
 for evidence computation via thermodynamic integration, but these can
 be computationally costly.
 
@@ -173,12 +154,10 @@ method for producing inter-model jumps in an RJMCMC that relies on
 interpolating single-model posterior distributions using a box
 decomposition of parameter space.
 
-Here we introduce an alternative technique for improving the
-acceptance ratio of inter-model jumps in an RJMCMC, leading to
-dramatically improved convergence of RJMCMC sample chains.  The
-technique uses a kD-tree data structure to construct an approximation
-to each model's posterior parameter distribution.  We draw jump
-proposals into the model from this approximation to its posterior.
+Here we introduce an alternative technique based on a kD-tree data 
+structure to construct an approximation
+to each model's posterior parameter distribution.  This improved interpolation method leads to dramatically faster convergence of RJMCMC sample chains.
+We draw jump proposals into the model from this approximation to its posterior.
 Because jumps are proposed preferentially to locations favored by the
 single-model posterior, the RJMCMC compares ``good'' locations in
 parameter space across all the models, and convergence is generally
@@ -785,7 +764,8 @@ We welcome readers to take advantage of this toolkit.
 
 We are grateful to Neil Cornish for interesting discussions.  IM
 acknowledges support from the NSF Astronomy and Astrophysics
-Postdoctoral Fellowship, award AST-0901985.  WF acknowledges support
+Postdoctoral Fellowship, award AST-0901985, for the early stages of this work.  
+WF acknowledges support
 from NSF grant AST0908930 and NASA grant NNX09AJ56G. DS acknowledges
 support from a Northwestern University Summer Undergraduate Research Grant.  IM is grateful for the hospitality offered by Monash University and, particularly, Yuri Levin.  This work has been partially supported by the UK Science and Technology Facilities Council.
 

@@ -1,0 +1,67 @@
+Dear Editor:
+
+We are grateful to the referees of our paper, "An Efficient Interpolation Technique for Jump Proposals in Reversible-Jump Markov Chain Monte Carlo Calculations" (Farr, Mandel, Stevens) for their many helpful comments and suggestions.  We detail our responses to the referees below.  The re-submitted manuscript carries these changes in addition to a few minor revisions, such as an update of the reference list.
+
+Sincerely yours,
+Will Farr, Ilya Mandel, Daniel Stevens
+
+----
+
+Report 1:
+
+> I am familiar with an earlier draft of this paper from internal LIGO review, and I'm pleased to see that it > is finally being submitted for publication.
+
+...
+
+> One minor quibble that I have is that the language in the introduction makes it seem that the underlying > idea is different. Both methods "construct an approximation to each
+> modelÕs posterior parameter distribution". The difference is that the kDE tree approach is far superior to > the original sparse histogram approach.
+
+We reformulated the sentence in question as follows to remove the ambiguity and make it clear that we are proposing an improved interpolation technique for constructing an approximate posterior, not a fundamentally different idea:
+
+"...Here we introduce an alternative technique based on a kD-tree data  structure to construct an approximation to each model's posterior parameter distribution.  This improved interpolation method leads to dramatically faster convergence of RJMCMC sample chains."
+
+
+> Other minor point is that the reference to parallel tempering does not point to the original paper on the > topic (Swendsen and Wang 1986).
+
+We included the missing reference.
+
+----
+
+Report 2:
+
+>>>This paper addresses an interesting and important issue in Bayesian model selection: Developingefficient jump proposals in reversible-jump Markov-chain Monte Carlo (RJMCMC)algorithms to transition between the models under consideration (high rejection rates forinter-model proposals represent the limiting factor in many applications). The approachproposed here|to exploit sampling of the posterior probability density (PPD) in the individualmodel spaces, characterized as a kD tree structure|seems like a very promising ideawhich could justify publication. 
+
+We thank the referee for this assessment.
+
+
+>>> However, there are a number of significant issues that must be addressed before publication is recommended.
+
+We address these issues below, and in the text where appropriate.
+
+>>> 1. The history of this work is unclear and concerning. The  first paragraph of page 4 says"We have successfully applied this RJMCMC technique to a 10-way model selectionamong alternative mass distribution models for black-hole X-ray binaries (Farr et al.2010)". This reference is again cited on page 13 as a successful application of themethod developed in the present manuscript. But this raises an obvious question:Has the method described in the present manuscript already been published by theauthors? If so, publication of the present manuscript does not seem justified since theit considers only a trivial toy problem which adds nothing of significance. Further,the reference section indicates that Farr et al. 2010 is in the submission stage to theAstrophysical Journal. What's the story here|is this a typo, or a badly out-of-datereference, or has the paper actually been in-review for five years? Is the methoddescribed in the present manuscript the same as in the 2010 paper (sounds like it is)?This must be sorted out, and unless the present manuscript contains new conceptscompared to earlier work, publication is not justified.
+
+The current paper does not repeat earlier publications, and includes key new material that has not been previously published.  The Farr et al., paper on "The Mass Distribution of Stellar-mass Black Holes" has been published in Astrophys. J. 741, 103, in 2011 (reference updated -- we apologize for the out-of-date reference which added to the confusion).  Farr+, 2011 dealt with measuring the mass distribution of stellar mass black holes in low-mass and high-mass X-ray binaries.  That analysis made use of an early implementation of the method described in this paper, and, consequently, a very brief summary of the method was included in Farr+, 2011.  However, the focus of Farr+, 2011, was on the astrophysical results rather than the method; consequently, the details of the algorithm and the thorough analysis presented here were not included in Farr+, 2011.  Moreover, the present paper includes a number of more recent (and unpublished) improvements to the method, such as the use of "rotated" boxes to improve the interpolation quality in higher-dimensional spaces (see Fig. 3 and associated text).  Finally, the use of the kD-interpolation scheme for adaptive sampling improvements in a single-model MCMC (Section 5 of the present paper) is entirely new.  Figure 4 illustrates the acceptance ratio of this single-model MCMC as applied to the very computationally challenging problem of parameter estimation on gravitational-wave parameter estimation (contrary to the referee's assertion that only toy models have been used for illustration).
+
+>>> 2. The explanation of the inter-model proposal and acceptance criterion is Section 3c isinadequate. While well-known material on Bayesian analysis (Section 3a) and MCMC(Section 3b) is presented at length with equations, the new RJMCMC approach isskimmed over in a single sentence (no equations) as \We perform MCMC in the supermodelparameter space just like a regular MCMC; we propose jumps to different parameterswithin a model (intra-model jumps) and jumps to a different model withdifferent parameters (inter-model jumps)" (page 6)...
+
+
+
+>>> 3. The examples given in the manuscript seem simplified to the point of triviality and/orare poorly explained. The only example given of model selection (the potentially importantcontribution of this paper) only involves sampling between 1D Gaussian andCauchy distributions (two unknown parameters each). While this does illustrate themethod (barely), it is of no practical relevance and is so much simpler than most realisticmodel-selection problems that it is not clear how efficiency and performancewould scale, or how useful the method could be in practice. I assume the authors areresearching real-world model-selection problems of practical interest (like alternativemass distribution models for black-hole X-ray binaries, mentioned on page 4). Includinga meaningful example such as this would greatly improve the paper and increaseits significance. The other two examples represent only single-model sampling and areof much less interest, but even so they should be properly explained. In the examplesin Figures 3 and 4, what are the problems, what are the parameters, and what do theresults mean? This current presentation is not satisfying to the reader.
+
+>>> 4. Claims are made of \dramatically improved convergence" (page 3), that \convergenceis generally rapid" (page 4), and \the interpolation method described above can dramaticallyimprove the runtime of an RJMCMC" (page 10). While I believe the methoddeveloped here could substantially improve efficiency in some cases, this is not actuallydemonstrated in the paper. The trivial example in Figure 2 appears to increaseinter-model acceptance by a factor of 8 or so, but no results on RJMCMC samplingconvergence are given. The example considered in Figure 4 claims to have improvedconvergence by a factor of two (not dramatic), but there is no discussion of what definition is applied for convergence|and as noted on page 6 (third paragraph), definingconvergence for MCMC sampling is a tricky business. Even applying a reasonableworking definition of convergence, given the random nature of MCMC sampling, averagesover several MCMC runs are often required to meaningfully compare convergencerates -- was that done here? While the claims of \dramatic" improvements in convergence may be true in some cases, they don't appear to be properly established in the paper.
+
+>>>  5a. Notation: While notation differs between disciplines, I am used to boldface (ratherthan over-arrows) being used to represent vectors in published work -- the authorscould consider this. Further, why is the set of parameters written as a vector,but the set of data not written as a vector (d)?
+
+We write parameters as a vector because we occasionally consider individual parameters or subsets of the parameter set; no such confusion is likely for the data.
+
+>>> 5b. Page 5, rst line after Section 2b heading: Should be j = 1; : : : not i = 1; : : :.(c) Page 5, third line after Section 2b heading: Should be \set of parameters" not\set of parameter".(d) Figure 1 would be clearer if parameter axes were added indicating the origin, withaxes scales in terms of standard deviations in x and y.(e) The x axis of Figure 2 is labeled Nboxing while it should be Nbox.(f) Figure 3 caption: kd should be kD.(g) Equation (5.1): P should be Q (this is the proposal distribution). Also, V mightbe better written as Vbox to indicate that it is the volume of the current box, likeNbox indicates the number of samples in the current box (V is not a constant butvaries with boxes).(h) Page 11: Inconsistent use of math or Roman font for some subscripts; e.g., Nboxand Nbox, and Ncrit. When the subscript is a label rather than an index, Romanfont is preferred.(i) Page 11, after Eq. (5.1): Please give an equation for V , the volume of the intersectionof the two (potentially high-dimensional) boxes.(j) Page 12, first paragraph discusses violations of detailed balance arising from usingthe sampling history to define proposals. Such methods are well known, includingthe requirements which must be met to avoid biased sampling (so-called diminishingadaptations). References (such as Brooks et al., 2011 Handbook of Markovchain Monte Carlo, New York: Springer) should be included here to be clear thisis not a new idea.(k) Figure 4's caption states \The acceptance probability rate asymptotes to thesteady-state solution once sufficient samples are accumulated for the kD treeto allow the sample density or be accurately interpolated." This asymptoticconvergence appears to occur by about step 2.0106; hence, all samples collectedprior to this point should be discarded as burn-in or the sampling is potentiallybiased. This should be mentioned explicitly in the paper.
+(l) Figure 4: Why denote the x axis divisions from 0 to 25 000 and then include\( X100)" in the axis label? Why not denote the divisions from 0 to 2.5 andinclude \(X 10^6)" in the label|this is the common use of exponential notation.
+
+
+
+----
+
+
+
+
+

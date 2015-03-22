@@ -1,0 +1,63 @@
+20-Mar-2015
+
+Dear Dr Mandel,
+
+The Subject Editor assigned to your paper ("An Efficient Interpolation Technique for Jump Proposals in Reversible-Jump Markov Chain Monte Carlo Calculations") has now received comments from two reviewers.  We would like you to revise your paper in accordance with the suggestions from both of the referees, which can be found below. Please note this decision does not guarantee eventual acceptance.
+
+Please submit a copy of your revised paper within three weeks (i.e. by the 12-Apr-2015). If we do not hear from you within this time then it will be assumed that the paper has been withdrawn. In exceptional circumstances, extensions may be possible if agreed with the Editorial Office in advance.We do not allow multiple rounds of revision so we urge you to make every effort to fully address all of the comments at this stage.  If deemed necessary by the Editors, your manuscript will be sent back to one or more of the original reviewers for assessment. If the original reviewers are not available we may invite new reviewers.
+
+To revise your manuscript, log into http://mc.manuscriptcentral.com/rsos and enter your Author Centre, where you will find your manuscript title listed under "Manuscripts with Decisions." Under "Actions," click on "Create a Revision." Your manuscript number has been appended to denote a revision. Revise your manuscript and upload a new version through your Author Centre.
+
+When submitting your revised manuscript, you must respond to the comments made by the referees and upload a file "Response to Referees" in "Section 6 - File Upload". Please use this to document how you have responded to the comments, and the adjustments you have made. In order to expedite the processing of the revised manuscript, please be as specific as possible in your response.
+
+In addition to addressing all of the reviewers' and editor's comments please also ensure that your revised manuscript contains the following sections before the reference list:
+
+• Ethics statement
+If your study uses humans or animals please include details of the ethical approval received, including the name of the committee that granted approval. For human studies please also detail whether informed consent was obtained. For field studies on animals please include details of all permissions, licences and/or approvals granted to carry out the fieldwork.
+
+• Data accessibility
+It is a condition of publication that all supporting data are made available either as supplementary information or preferably in a suitable permanent repository. The data accessibility section should state where the article's supporting data can be accessed. This section should also include details, where possible of where to access other relevant research materials such as statistical tools, protocols, software etc can be accessed. If the data has been deposited in an external repository this section should list the database, accession number and link to the DOI for all data from the article that has been made publicly available. Data sets that have been deposited in an external repository and have a DOI should also be appropriately cited in the manuscript and included in the reference list.
+
+• Competing interests
+Please declare any financial or non-financial competing interests, or state that you have no competing interests.
+• Authors’ contributions
+All submissions, other than those with a single author, must include an Authors’ Contributions section which individually lists the specific contribution of each author. The list of Authors should meet all of the following criteria; 1) substantial contributions to conception and design, or acquisition of data, or analysis and interpretation of data; 2) drafting the article or revising it critically for important intellectual content; and 3) final approval of the version to be published.
+
+All contributors who do not meet all of these criteria should be included in the acknowledgements.
+
+We suggest the following format:
+AB carried out the molecular lab work, participated in data analysis, carried out sequence alignments, participated in the design of the study and drafted the manuscript; CD carried out the statistical analyses; EF collected field data; GH conceived of the study, designed the study, coordinated the study and helped draft the manuscript. All authors gave final approval for publication.
+
+• Acknowledgements
+Please acknowledge anyone who contributed to the study but did not meet the authorship criteria.
+
+• Funding statement
+Please list the source of funding for each author.
+
+Once again, thank you for submitting your manuscript to Royal Society Open Science and I look forward to receiving your revision. If you have any questions at all, please do not hesitate to get in touch.
+
+Yours sincerely,
+Emilie Aime
+Senior Publishing Editor, Royal Society Open Science
+openscience@royalsociety.org
+
+
+Comments to Author:
+
+Reviewers' Comments to Author:
+Reviewer: 1
+
+Comments to the Author(s)
+Please see attached PDF Review.
+
+Reviewer: 2
+
+Comments to the Author(s)
+I am familiar with an earlier draft of this paper from internal LIGO review, and I'm pleased to see that it is finally being submitted for publication.
+
+The paper describes an improved implementation of the idea that Tyson Littenberg and I suggested for using the posterior samples from fixed-dimension MCMCs to generate efficient proposal distributions for trans-dimensional RJMCMCs.
+
+One minor quibble that I have is that the language in the introduction makes it seem that the underlying idea is different. Both methods "construct an approximation to each
+model’s posterior parameter distribution". The difference is that the kDE tree approach is far superior to the original sparse histogram approach.
+
+Other minor point is that the reference to parallel tempering does not point to the original paper on the topic (Swendsen and Wang 1986).
