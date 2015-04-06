@@ -113,11 +113,11 @@ focuses on evidence computation rather than sampling the posterior
 probability density functions.)  It is not straightforward to compute
 the model evidence from MCMC samples.  The most direct way to estimate
 the evidence for a model from MCMC samples is to compute the
-harmonic-mean estimator, but this estimator of the evidence suffers
-from infinite variance
-\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.  MCMC
+harmonic-mean estimator, but this estimator of the evidence  can suffer
+from infinite variance 
+\cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009,WolpertSchmidler:2012}.  MCMC
 implementations with parallel tempering \cite{SwendsenWang:1986,EarlDeem:2005} allow
-for evidence computation via thermodynamic integration, but these can
+for evidence computation via thermodynamic integration \cite{FrielPettitt:2008}, but these can
 be computationally costly.
 
 \cite{Weinberg2009} gives a method for directly computing
@@ -135,7 +135,7 @@ circumstance, the Reversible Jump MCMC technique first introduced in
 \cite{Green1995} is one of the most reliable and accurate ways to
 compare the models.  Reversible Jump MCMC (RJMCMC), described more
 fully in Section \ref{sec:reversible-jump}, performs a standard MCMC
-in a superspace that is a direct sum of all the model parameter
+in space that is an augmented union of all the model parameter
 spaces.  Such an MCMC involves both intra- and inter-model jumps; the
 number of MCMC samples in each model's parameter space is proportional
 to that model's relative evidence in the suite of models being
@@ -281,12 +281,10 @@ p(\vtheta^{(j+1)})=\int_{V} d\vtheta^{(j)} p(\vtheta^{(j)} \to
 where the jump probability $p(\vtheta^{(j)} \to \vtheta^{(j+1)})$
 depends only on $\vtheta^{(j)}$ and $\vtheta^{(j+1)}$.  An additional
 requirement for an MCMC arises from the fact that the desired
-distribution is the equilibrium distribution.  In other words, if we
-assume that state $(j)$ of the chain is sampled from the desired PDF,
-$p(\vtheta^{(j)})=p(\vtheta^{(j)}|d,M)$ , then the next state $(j+1)$ must
-be sampled from the PDF as well, so that
-$p(\vtheta^{(j+1)})=p(\vtheta^{(j+1)}|d,M)$; this condition is known as
-``detailed balance.''
+distribution is the equilibrium distribution.  Detailed balance requires that
+$p(\vtheta^{(i)}) p(\vtheta^{(i)} \to \vtheta^{(j)}) = p(\vtheta^{(j)}) p(\vtheta^{(j)} \to \vtheta^{(i)})$.
+
+% In other words, if we assume that state $(j)$ of the chain is sampled from the desired PDF, $p(\vtheta^{(j)})=p(\vtheta^{(j)}|d,M)$ , then the next state $(j+1)$ must be sampled from the PDF as well, so that $p(\vtheta^{(j+1)})=p(\vtheta^{(j+1)}|d,M)$; this condition is known as ``detailed balance.''
 
 One way to produce such a sequence of samples is via the
 Metropolis-Hastings algorithm, first proposed in
@@ -348,8 +346,7 @@ initial location.  The samples thus discarded are referred to as
 
 The samples produced by an MCMC algorithm can be used to directly
 perform a Monte Carlo evidence integral.  This results in a harmonic
-mean estimator for the evidence, which suffers from a large variance
-and bias \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009}.
+mean estimator for the evidence, which may suffer from infinite variance \cite{NewtonRaftery:1994,Chib:1995,vanHaasteren:2009,WolpertSchmidler:2012}.
 Additional techniques for the direct integration of evidence, also
 based on a kD tree decomposition of the parameter space (see
 Sec.~\ref{sec:kDTree}), are described in \cite{Weinberg2009}.  These
@@ -762,12 +759,12 @@ We welcome readers to take advantage of this toolkit.
 
 \section*{Acknowledgments}
 
-We are grateful to Neil Cornish for interesting discussions.  IM
+We are grateful to Neil Cornish for interesting discussions.  WF acknowledges support
+from NSF grant AST0908930 and NASA grant NNX09AJ56G.  IM
 acknowledges support from the NSF Astronomy and Astrophysics
 Postdoctoral Fellowship, award AST-0901985, for the early stages of this work.  
-WF acknowledges support
-from NSF grant AST0908930 and NASA grant NNX09AJ56G. DS acknowledges
-support from a Northwestern University Summer Undergraduate Research Grant.  IM is grateful for the hospitality offered by Monash University and, particularly, Yuri Levin.  This work has been partially supported by the UK Science and Technology Facilities Council.
+ DS acknowledges
+support from a Northwestern University Summer Undergraduate Research Grant. IM is grateful for the hospitality of the Monash Center for Astrophysics supported by a Monash Research Acceleration Grant (PI Y.~Levin).  This work has been partially supported by the UK Science and Technology Facilities Council.
 
 \section*{}
 
