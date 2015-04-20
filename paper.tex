@@ -10,6 +10,7 @@
 
 \newcommand{\vtheta}{\vec{\theta}}
 \newcommand{\Nbox}{N_\mathrm{box}}
+\newcommand{\Ncrit}{N_\mathrm{crit}}
 \newcommand{\Vbox}{V_\mathrm{box}}
 
 \newcommand{\be}{\begin{equation}}
@@ -261,10 +262,10 @@ now describe.
 \subsection{Markov chain Monte Carlo} \label{sec:mcmc}
 
 A Markov chain Monte Carlo \cite{Gilks:1996} produces a set of samples
-$\{ \vtheta^{(j)} \, | \, i = 1, \ldots \}$ from the model parameter
+$\{ \vtheta^{(j)} \, | \, j = 1, \ldots \}$ from the model parameter
 space that are sampled according to the posterior, meaning that, in
 the limit that the chain length tends to infinity, the relative
-frequency with which a given set of parameter appears in the chain is
+frequency with which a given set of parameters appears in the chain is
 proportional to the desired posterior, $p(\vtheta|d,M)$.  Therefore,
 the output of an MCMC can be directly interpreted as the posterior PDF
 over the full parameter space, while PDFs for individual parameters
@@ -682,8 +683,8 @@ coordinate axes along which the tree subdivides.
 
 In this section, we propose a practical solution that allows us to incorporate larger-scale features in the sample density distribution.  We illustrate our solution with an single-model MCMC that updates the jump proposal distribution on-the-fly by using a kD tree to interpolate the density of existing samples.  We conclude with an example of a successful application to gravitational-wave parameter estimation.
 
-The kD-tree based interpolated jump proposal described in Section \ref{sec:kDTree} selects one sample from the tree at random and proposes a uniform point from the box containing that sample.  This ignores the density of other samples in the neighborhood of this box, which contains additional information about the true density within the box, which is likely non-uniform.  A better proposal, therefore, would account for larger-scale sample covariances in parameter space.  To address significant covariance between samples, which would correspond to strong density gradients and a very non-uniform density profile within a rectangular box, the modified jump proposal does not descend to the leaf-nodes of the tree, but instead stops descending whenever the number of samples in the current box, $N_{box}$, falls below some threshold, $N_{crit}$. We then find the principal axes of the samples
-contained in this box by calculating the eigenvectors of the covariance matrix of these samples. We use these eigenvectors to draw a new box. This box -- henceforth called a covariance cell -- contains all $N_{box}$ samples from the kD-tree box, is centered on the mean of these samples, and has edges that are aligned with the principal axes. Furthermore, this box is drawn around the samples as tightly as possible; in other words, for each edge, there exists a point in the covariance cell that lies along that edge. Figure \ref{fig:PCC} illustrates these two boxes.
+The kD-tree based interpolated jump proposal described in Section \ref{sec:kDTree} selects one sample from the tree at random and proposes a uniform point from the box containing that sample.  This ignores the density of other samples in the neighborhood of this box, which contains additional information about the true density within the box, which is likely non-uniform.  A better proposal, therefore, would account for larger-scale sample covariances in parameter space.  To address significant covariance between samples, which would correspond to strong density gradients and a very non-uniform density profile within a rectangular box, the modified jump proposal does not descend to the leaf-nodes of the tree, but instead stops descending whenever the number of samples in the current box, $\Nbox$, falls below some threshold, $\Ncrit$. We then find the principal axes of the samples
+contained in this box by calculating the eigenvectors of the covariance matrix of these samples. We use these eigenvectors to draw a new box. This box -- henceforth called a covariance cell -- contains all $\Nbox$ samples from the kD-tree box, is centered on the mean of these samples, and has edges that are aligned with the principal axes. Furthermore, this box is drawn around the samples as tightly as possible; in other words, for each edge, there exists a point in the covariance cell that lies along that edge. Figure \ref{fig:PCC} illustrates these two boxes.
 
 \begin{figure}
   \includegraphics[width=0.8\columnwidth]{PCC}
@@ -692,22 +693,22 @@ contained in this box by calculating the eigenvectors of the covariance matrix o
     aligned with the axes is the normal kD-tree box containing the
     given samples, while the tighter box is the ``covariance cell''
     aligned with the eigenvectors of the sample distribution.  The
-    modified kd-interpolated jump proposal draws a point from the
+    modified kD-interpolated jump proposal draws a point from the
     intersection of the two boxes. Tightly-correlated posteriors in
     parameter space such as this are typical of the gravitational-wave
-    parameter estimation problem described in \cite{Veitch:2014} and
+    parameter estimation problem described in \protect\cite{Veitch:2014} and
     in the text.  Without the modification to account for the
     correlated samples, the kD neighbourhood of these points would
     produce a very inefficient jump proposal, since most of the
-    bounding-box would contain empty (i.e.\ low-posterior) parameter
+    bounding-box would contain empty (i.e., low-posterior) parameter
     space.}
 \end{figure}
 
-The jump proposal chooses a stored sample at random and finds the largest kD-tree box containing it and fewer than $N_{crit}$ total samples. It then draws the covariance cell and proposes a new point uniformly from the intersection of the covariance cell with the original kD-tree box.
+The jump proposal chooses a stored sample at random and finds the largest kD-tree box containing it and fewer than $\Ncrit$ total samples. It then draws the covariance cell and proposes a new point uniformly from the intersection of the covariance cell with the original kD-tree box.
 The jump probability for this jump proposal is still (c.f.\ Eq.\
 \eqref{eq:neighbourhood-jp}) given by
 %
-\bel{modforward} P(\vtheta_i \rightarrow \vtheta_{i+1}) =
+\bel{modforward} Q(\vtheta_i \rightarrow \vtheta_{i+1}) =
 \frac{\Nbox}{N V} , \ee
 %
 where $N$ is the total number of samples in the kD tree, and $V$ is the
@@ -733,8 +734,8 @@ other hand, when the kD proposal is used in a suite of other jump proposals, thi
 
 
 
-This technique trivially violates detailed balance since the jump proposal distribution depends on the past history. One way to address this problem requires continuously accumulating samples into the kD tree as the MCMC explores more
-of the parameter space. As the number of samples drawn from the posterior PDF increases, the neighborhoods around each sample decrease with increasing sample density and the calculated covariances between samples in the kD tree better approximate the true covariances between parameters in the equilibrium posterior PDF.  Hence, for large $N$, the change in $P(\vtheta^{(j)} \rightarrow \vtheta^{(j+1)})$ approaches zero and the jump proposal does a progressively better job of sampling the equilibrium posterior while becoming asymptotically Markovian.  Conservatively, the entire set of samples obtained while the jump proposal is being dynamically updated could be discarded as burn-in, and future analysis could use the static jump proposal distribution interpolated from samples accumulated during the extended burn-in phase. 
+This technique trivially violates detailed balance since the jump proposal distribution depends on the past history. One way to address this problem, through diminishing adapations \cite{Brooks:2011}, requires continuously accumulating samples into the kD tree as the MCMC explores more
+of the parameter space. As the number of samples drawn from the posterior PDF increases, the neighborhoods around each sample decrease with increasing sample density and the calculated covariances between samples in the kD tree better approximate the true covariances between parameters in the equilibrium posterior PDF.  Hence, for large $N$, the change in $Q(\vtheta^{(j)} \rightarrow \vtheta^{(j+1)})$ approaches zero and the jump proposal does a progressively better job of sampling the equilibrium posterior while becoming asymptotically Markovian.  Conservatively, the entire set of samples obtained while the jump proposal is being dynamically updated could be discarded as burn-in, and future analysis could use the static jump proposal distribution interpolated from samples accumulated during the extended burn-in phase. 
 %Because this introduces a dependence on the
 %previous states of the MCMC, the jump proposal is no longer
 %Markovian.  However, it remains \emph{asymptotically} Markovian \ilya{[And being asymptotically Markovian (whatever that actually means -- at least a reference?) -- is provably sufficient to guarantee that we sample from the equilibrium distribution even though we nominally violate detailed balance? (again, a reference?)]} , which
@@ -795,7 +796,7 @@ proposals in \texttt{LALInferenceMCMC}.
     steps (in hundreds). The simulation in question was a
     nine-dimensional analysis of a simulated gravitational-wave signal
     injected into synthetic data similar to that taken by the LIGO
-    and Virgo detectors \cite{AdvLIGO,AdvVirgo}.  The parameter space
+    and Virgo detectors \protect\cite{AdvLIGO,AdvVirgo}.  The parameter space
     includes the masses of the compact objects generating the
     gravitational-wave, their location on the sky, distance, orbital
     orientation, the time of signal arrival, and the orbital phase.
@@ -805,8 +806,7 @@ proposals in \texttt{LALInferenceMCMC}.
     of the kD proposal, when applied to one in twenty jumps proposed
     in this simulation, it improved the convergence time of the sampler by a factor of two
     compared to using only the standard suite of proposals. 
-    The acceptance rate asymptotes to the steady-state solution once sufficient samples have been accumulated in the kD tree to allow the sample density to be accurately interpolated.
-%\dan{[Taking a leap here, someone please confirm/deny/add qualifiers] The initial decrease in acceptances arises from insufficient population of the kD tree with too few samples, while the leveling-off later in the MCMC indicates convergence.} \ilya{[I see structure in this figure (a high acceptance probability, followed by a dip, followed by an asymptote).  Is this a fluke, or do you always see this -- and, if so, why?  BTW, what's the autocorrelation length (just to give me a sense of scale, so I am not reading too much into meaningless fluctuations within an AC length)?]} \dan{[Don't recall the autocorrelation length. Will?]}
+    The acceptance rate asymptotes to the steady-state solution once sufficient samples have been accumulated in the kD tree to allow the sample density to be accurately interpolated; samples collectedprior to this point should be discarded as burn-in.
   }
 \end{figure}
 
