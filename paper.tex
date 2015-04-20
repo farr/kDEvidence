@@ -74,7 +74,7 @@ $^5$ Department of Astronomy, The Ohio State
 \email{imandel@star.sr.bham.ac.uk}}
 
 \begin{abstract}
-Selection among alternative theoretical models given an observed data set is an important challenge in many areas of physics and astronomy.  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an extremely powerful technique for performing Bayesian model selection, but it suffers from a fundamental difficulty: it requires jumps between model parameter spaces, but cannot efficiently explore both parameter spaces at once.  Thus, a naive jump between parameter spaces is unlikely to be accepted in the MCMC algorithm and convergence is correspondingly slow.  Here we demonstrate an interpolation technique that uses samples from single-model MCMCs to propose inter-model jumps from an approximation to the single-model posterior of the target parameter space.  The interpolation technique, based on a kD-tree data structure, is adaptive and efficient in modest dimensionality.  We show that our technique leads to dramatically improved convergence over naive jumps in an RJMCMC, and compare it to other proposals in the literature to improve the convergence of RJMCMCs.  We also demonstrate the use of the same interpolation technique as a way to construct efficient ``global'' proposal distributions for single-model MCMCs without prior knowledge of the structure of the posterior distribution, and discuss improvements that permit the method to be used in higher-dimensional spaces efficiently.
+Selection among alternative theoretical models given an observed data set is an important challenge in many areas of physics and astronomy.  Reversible-jump Markov chain Monte Carlo (RJMCMC) is an extremely powerful technique for performing Bayesian model selection, but it suffers from a fundamental difficulty: it requires jumps between model parameter spaces, but cannot efficiently explore both parameter spaces at once.  Thus, a naive jump between parameter spaces is unlikely to be accepted in the MCMC algorithm and convergence is correspondingly slow.  Here we demonstrate an interpolation technique that uses samples from single-model MCMCs to propose inter-model jumps from an approximation to the single-model posterior of the target parameter space.  The interpolation technique, based on a kD-tree data structure, is adaptive and efficient in modest dimensionality.  We show that our technique leads to improved convergence over naive jumps in an RJMCMC, and compare it to other proposals in the literature to improve the convergence of RJMCMCs.  We also demonstrate the use of the same interpolation technique as a way to construct efficient ``global'' proposal distributions for single-model MCMCs without prior knowledge of the structure of the posterior distribution, and discuss improvements that permit the method to be used in higher-dimensional spaces efficiently.
 \end{abstract}
 
 %\pacs{02.70.Tt, 95.75.Pq, 07.05.Kf}
@@ -156,7 +156,7 @@ decomposition of parameter space.
 
 Here we introduce an alternative technique based on a kD-tree data 
 structure to construct an approximation
-to each model's posterior parameter distribution.  This improved interpolation method leads to dramatically faster convergence of RJMCMC sample chains.
+to each model's posterior parameter distribution.  This improved interpolation method leads to faster convergence of RJMCMC sample chains.
 We draw jump proposals into the model from this approximation to its posterior.
 Because jumps are proposed preferentially to locations favored by the
 single-model posterior, the RJMCMC compares ``good'' locations in
@@ -365,7 +365,43 @@ parameter space of that model, $\{M_i, \vtheta_i\}$.  We perform the
 MCMC in the ``super-model'' parameter space just like a regular MCMC;
 we propose jumps to different parameters within a model (intramodel
 jumps) and jumps to a different model with different parameters
-(intermodel jumps).  The resulting chain samples from the posterior
+(intermodel jumps).  The acceptance probability for a proposed jump
+from $\vtheta^{(j)}_i$ in model $M_i$ to $\vtheta^p_j$ in model $M_j$
+becomes
+\begin{equation}
+p_{\textnormal{accept}} \equiv \min\Bigl(1,
+\frac{p(\vtheta^p_j, M_j|d)}{p(\vtheta^{(j)}_i, M_i|d)}
+\frac{Q(\vtheta^p_j ,M_j \to
+  \vtheta^{(j)}_i, M_i)}{Q(\vtheta^{(j)}_i, M_i \to \vtheta^p_j, M_j)} \Bigr).
+\end{equation}
+Here the $Q$ factors incorporate both a discrete probability on the
+model index, reflecting the probabilistic choice of which model to
+jump into, and also a continuous probability density on target model's
+parameter space.  For example,
+$Q(\vtheta^p_j ,M_j \to \vtheta^{(j)}_i, M_i)$ has a factor for the
+probability of proposing a jump to model $i$ when in model $j$, and is
+a density on the parameter space of $M_i$.  These densities cancel the
+corresponding densities in the ratio of posteriors, making the
+acceptance probability a parameterisation-independent scalar.  In the
+common special case where the two parameter spaces have equal
+dimension and the jump proposal is a diffeomorphism, $\phi$, between
+them,
+\begin{equation}
+  \vtheta^p_j = \phi\left( \vtheta^{(j)}_i \right),
+\end{equation}
+and therefore 
+\begin{equation}
+  \vtheta^{(j)}_i = \phi^{-1} \left( \vtheta^p_j \right),
+\end{equation}
+then the jump proposal ratio reduces to the Jacobian of the
+diffeomorphism:
+\begin{equation}
+  \frac{Q(\vtheta^p_j ,M_j \to
+  \vtheta^{(j)}_i, M_i)}{Q(\vtheta^{(j)}_i, M_i \to \vtheta^p_j, M_j)}
+= \left| \frac{\partial \phi}{\partial \vtheta^{(j)}_i} \right|.
+\end{equation}
+
+ The resulting chain samples from the posterior
 $p(M_i, \{\vtheta_i\}|d)$.  As in a usual MCMC, the PDF on the model as a
 parameter, with other parameters ignored, is obtained by marginalizing
 over the remaining parameters.  The posterior probability of a model
@@ -526,11 +562,15 @@ tree, $T$:
 \label{sec:efficiency}
 
 In this section, we demonstrate the efficiency of the kD-interpolated
-jump proposal on a toy model-comparison problem.  We draw $N = 100$
-simulated data points from a $N(0,1)$ Gaussian distribution, and then
-ask whether these data are better described by a model where they are
-Gaussian distributed with unknown mean $\mu$ and standard deviation
-$\sigma$
+jump proposal on a toy model-comparison problem.  The same algorithm
+has been used in real-world settings \cite{Farr2010} and, as discussed
+below, is the available in several forms as a software library for
+re-use by others.
+
+In the toy model of this section, we draw $N = 100$ simulated data
+points from a $N(0,1)$ Gaussian distribution, and then ask whether
+these data are better described by a model where they are Gaussian
+distributed with unknown mean $\mu$ and standard deviation $\sigma$
 %
 \be
 p(x) = \frac{1}{\sqrt{2\pi} \sigma} \exp\left( - \frac{(x-\mu)^2}{2
@@ -607,7 +647,7 @@ transitions in the RJMCMC.  Thus, as the acceptance rate of
 inter-model jumps goes down, the RJMCMC must run longer to achieve a
 desired accuracy in the evidence ratio.  By boosting the acceptance
 rate of inter-model jumps, the interpolation method described above
-can dramatically improve the runtime of an RJMCMC.
+can improve the runtime of an RJMCMC.
 
 \section{kD-Interpolated Jump Proposal in Higher-Dimensional
   Single-Model MCMCs}
@@ -634,7 +674,17 @@ contained in this box by calculating the eigenvectors of the covariance matrix o
   \caption{\label{fig:PCC} A two-dimensional illustration of the two
     boxes involved in the modified kD proposal.  The larger box
     aligned with the axes is the normal kD-tree box containing the
-    given samples, while the tighter box is the ``covariance cell'' aligned with the eigenvectors of the sample distribution.  The modified kd-interpolated jump proposal draws a point from the intersection of the two boxes. }
+    given samples, while the tighter box is the ``covariance cell''
+    aligned with the eigenvectors of the sample distribution.  The
+    modified kd-interpolated jump proposal draws a point from the
+    intersection of the two boxes. Tightly-correlated posteriors in
+    parameter space such as this are typical of the gravitational-wave
+    parameter estimation problem described in \cite{Veitch:2014} and
+    in the text.  Without the modification to account for the
+    correlated samples, the kD neighbourhood of these points would
+    produce a very inefficient jump proposal, since most of the
+    bounding-box would contain empty (i.e.\ low-posterior) parameter
+    space.}
 \end{figure}
 
 The jump proposal chooses a stored sample at random and finds the largest kD-tree box containing it and fewer than $N_{crit}$ total samples. It then draws the covariance cell and proposes a new point uniformly from the intersection of the covariance cell with the original kD-tree box.
@@ -703,29 +753,44 @@ signal has a nine-dimensional parameter space, and the posterior often
 includes near-degeneracies and multiple modes that make convergence of
 the MCMC chain very slow with traditional proposals \cite{S6PE}.  
 
-Figure \ref{fig:accratio} shows the acceptance ratio for the kD-tree jump
-proposal applied as part of a \texttt{LALInferenceMCMC} analysis.  In this example, the kD-tree jump proposal is one of several jump proposals used during the MCMC, and the kD tree itself is updated with accepted samples whenever its jump proposal is called. In spite of the very low acceptance
-rate of the proposal, applying the kD-tree proposal to one out of
-20 proposed jumps improved the convergence time of the simulation
-by a factor of two compared to the standard suite of proposals because
-it is particularly efficient at producing ``mode-hopping'' jumps,
-which are difficult to produce with the other proposals in
-\texttt{LALInferenceMCMC}. 
+Figure \ref{fig:accratio} shows the acceptance ratio for the kD-tree
+jump proposal applied as part of a \texttt{LALInferenceMCMC} analysis.
+In this example, the kD-tree jump proposal is one of several jump
+proposals used during the MCMC, and the kD tree itself is updated with
+accepted samples whenever its jump proposal is called. In spite of the
+very low acceptance rate of the proposal, applying the kD-tree
+proposal to one out of 20 proposed jumps improved the convergence
+time---defined as the average time to reach a specified number of
+independent samples from the posterior, thinning by the
+autocorrelation length as described in \cite{Veitch:2014}---of the
+simulation by a factor of two compared to the standard suite of
+proposals because it is particularly efficient at producing
+``mode-hopping'' jumps, which are difficult to produce with the other
+proposals in \texttt{LALInferenceMCMC}.
 
 \begin{figure}
   \begin{center}
     \includegraphics[width=0.8\columnwidth]{linearlog3}
   \end{center}
-  \caption{\label{fig:accratio} The cumulative parameter acceptance
+  \caption{\label{fig:accratio} The cumulative acceptance
     ratio for the modified kD-tree jump proposal used in the
     \texttt{LALInferenceMCMC} code as a function of the number of
-    steps (in hundreds). In spite of the small acceptance ratio, the
-    kD tree proposal, applied to one in 20 proposed jumps,
-    improved the convergence time of the sampler by a factor of two
+    steps (in hundreds). The simulation in question was a
+    nine-dimensional analysis of a simulated gravitational-wave signal
+    injected into synthetic data similar to that taken by the LIGO
+    and Virgo detectors \cite{AdvLIGO,AdvVirgo}.  The parameter space
+    includes the masses of the compact objects generating the
+    gravitational-wave, their location on the sky, distance, orbital
+    orientation, the time of signal arrival, and the orbital phase.
+    The posterior in this problem has a number of well-separated modes
+    in the parameter space which are difficult to jump between using
+    traditional jump proposals; in spite of the small acceptance ratio
+    of the kD proposal, when applied to one in twenty jumps proposed
+    in this simulation, it improved the convergence time of the sampler by a factor of two
     compared to using only the standard suite of proposals. 
     The acceptance rate asymptotes to the steady-state solution once sufficient samples have been accumulated in the kD tree to allow the sample density to be accurately interpolated.
 %\dan{[Taking a leap here, someone please confirm/deny/add qualifiers] The initial decrease in acceptances arises from insufficient population of the kD tree with too few samples, while the leveling-off later in the MCMC indicates convergence.} \ilya{[I see structure in this figure (a high acceptance probability, followed by a dip, followed by an asymptote).  Is this a fluke, or do you always see this -- and, if so, why?  BTW, what's the autocorrelation length (just to give me a sense of scale, so I am not reading too much into meaningless fluctuations within an AC length)?]} \dan{[Don't recall the autocorrelation length. Will?]}
-}
+  }
 \end{figure}
 
 \section{Conclusion}
