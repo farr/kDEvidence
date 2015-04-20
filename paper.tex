@@ -543,20 +543,36 @@ are shown in Figure \ref{fig:kD-tree}.
 \end{figure}
 
 In order to use the kD-tree interpolation as a jump proposal in an
-MCMC, we must be able to quickly find the neighborhood associated with
-a given point to compute the jump probability (see
-Eq.~\ref{eq:p-accept}).  This can be accomplished in $\order{\log N}$
-time and constant space with the following algorithm, which is a
-standard binary tree search.  Given the point, $\vtheta_i$ and the
-tree, $T$:
+MCMC, we randomly select a point stored in the kD tree with equal
+probability, and propose from the associated neighbourhood.
+Therefore, we must be able to quickly find the neighborhood associated
+with a given point to compute the jump probability (see
+Eq.~\ref{eq:p-accept}).  We introduce an additional parameter into the
+neighbourhood search, $N_\mathrm{boxing}$, which describes the minimum
+number of points in a kD box used as the neighbourhood for a point;
+small $N_\mathrm{boxing}$ increases variance in the proposal but
+resolves finer-scale structure in the posterior.  The neighbourhood
+search can be accomplished in $\order{\log N}$ time and constant space
+with the following algorithm, which is a modified binary tree search.
+Given the randomly-chosen point, $\vtheta_i$, the tree, $T$, and
+$N_\mathrm{boxing}$:
 \begin{enumerate}
-\item If $T$ contains exactly one sample point, then its box is the
-  associated neighborhood.  Otherwise:
+\item If $T$ contains fewer than $2N_\mathrm{boxing}$ points, then
+  its box is the associated neighborhood.  Otherwise:
 \item The tree $T$ has two sub-trees.  If the point $\vtheta_i$ is
   contained in the ``left'' sub-tree, then return to Step 1,
   considering this sub-tree; otherwise return to Step 1, considering
   the ``right'' sub-tree.
 \end{enumerate}
+The returned box is used for the jump proposal by drawing uniformly
+from its interior, so the proposal density is 
+\begin{equation}
+  \label{eq:neighbourhood-jp}
+  Q(\vtheta \to \vtheta^p) = \frac{N_\mathrm{box}}{N V},
+\end{equation}
+where $N$ is the number of points in the tree, $N_\mathrm{box}$ is the
+number of points in the chosen kD box, and $V$ is the coordinate-space
+volume of the box.
 
 \section{RJMCMC Efficiency}
 \label{sec:efficiency}
@@ -688,7 +704,8 @@ contained in this box by calculating the eigenvectors of the covariance matrix o
 \end{figure}
 
 The jump proposal chooses a stored sample at random and finds the largest kD-tree box containing it and fewer than $N_{crit}$ total samples. It then draws the covariance cell and proposes a new point uniformly from the intersection of the covariance cell with the original kD-tree box.
-The jump probability for this jump proposal is given by
+The jump probability for this jump proposal is still (c.f.\ Eq.\
+\eqref{eq:neighbourhood-jp}) given by
 %
 \bel{modforward} P(\vtheta_i \rightarrow \vtheta_{i+1}) =
 \frac{\Nbox}{N V} , \ee
